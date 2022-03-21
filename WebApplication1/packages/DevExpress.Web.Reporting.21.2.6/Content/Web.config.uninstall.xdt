@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <system.web>
+    <pages>
+      <controls>
+        <add xdt:Transform="Remove" xdt:Locator="Condition(@namespace='DevExpress.XtraReports.Web')" />
+      </controls>
+    </pages>
+    <httpHandlers>
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRDV.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRD.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXQB.axd')" />
+    </httpHandlers>
+  </system.web>
+
+  <system.webServer>
+    <handlers>
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRDV.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRD.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXQB.axd')" />
+    </handlers>
+  </system.webServer>
+</configuration>

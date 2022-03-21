@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <system.web>
+    <pages xdt:Transform="InsertIfMissing">
+    </pages>
+    <httpHandlers  xdt:Transform="InsertIfMissing">
+    </httpHandlers>
+  </system.web>
+  <system.web>
+    <pages>
+      <controls xdt:Transform="InsertIfMissing">
+      </controls>
+    </pages>
+    <httpHandlers>
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRDV.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRD.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXQB.axd')" />
+      <add xdt:Transform="Insert" type="DevExpress.Web.ASPxHttpHandlerModule, DevExpress.Web.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" verb="GET,POST" path="DXXRDV.axd" validate="false" />
+      <add xdt:Transform="Insert" type="DevExpress.Web.ASPxHttpHandlerModule, DevExpress.Web.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" verb="GET,POST" path="DXXRD.axd" validate="false" />
+      <add xdt:Transform="Insert" type="DevExpress.Web.ASPxHttpHandlerModule, DevExpress.Web.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" verb="GET,POST" path="DXQB.axd" validate="false" />
+    </httpHandlers>
+  </system.web>
+  <system.web>
+    <pages>
+      <controls>
+        <add xdt:Transform="Remove" xdt:Locator="Condition(@namespace='DevExpress.XtraReports.Web')" />
+        <add xdt:Transform="Insert" tagPrefix="dx" namespace="DevExpress.XtraReports.Web" assembly="DevExpress.XtraReports.v21.2.Web.WebForms, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+      </controls>
+    </pages>
+  </system.web>
+
+  <system.webServer xdt:Transform="InsertIfMissing">
+  </system.webServer>
+  <system.webServer>
+    <handlers xdt:Transform="InsertIfMissing">
+    </handlers>
+  </system.webServer>
+  <system.webServer>
+    <handlers>
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRDV.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXXRD.axd')" />
+      <add xdt:Transform="Remove" xdt:Locator="Condition(@path='DXQB.axd')" />
+      <add xdt:Transform="Insert" type="DevExpress.Web.ASPxHttpHandlerModule, DevExpress.Web.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" verb="GET,POST" path="DXXRDV.axd" name="ASPxWebDocumentViewerHandlerModule" preCondition="integratedMode" />
+      <add xdt:Transform="Insert" type="DevExpress.Web.ASPxHttpHandlerModule, DevExpress.Web.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" verb="GET,POST" path="DXXRD.axd" name="ASPxReportDesignerHandlerModule" preCondition="integratedMode" />
+      <add xdt:Transform="Insert" type="DevExpress.Web.ASPxHttpHandlerModule, DevExpress.Web.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" verb="GET,POST" path="DXQB.axd" name="ASPxQueryBuilderDesignerHandlerModule" preCondition="integratedMode" />
+    </handlers>
+  </system.webServer>
+</configuration>

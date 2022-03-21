@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target
+    Name="PreprocessVSRepxManifestResourceNames"
+    Condition="'@(EmbeddedResource)' != ''"
+    BeforeTargets="CreateManifestResourceNames"
+    >
+    <ItemGroup>
+      <EmbeddedResource Condition="('%(Extension)' == '.vsrepx' or '%(Extension)' == '.repx') and Exists('%(RelativeDir)%(Filename)$(DefaultLanguageSourceExtension)')">
+        <DependentUpon>%(Filename)$(DefaultLanguageSourceExtension)</DependentUpon>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+  <Target
+    Name="PostprocessVSRepxManifestResourceNames"
+    Condition="'@(EmbeddedResource)' != ''"
+    AfterTargets="CreateManifestResourceNames"
+    >
+    <ItemGroup>
+      <EmbeddedResource Condition="('%(Extension)' == '.vsrepx' or '%(Extension)' == '.repx') and '%(EmbeddedResource.DependentUpon)' != '' and '%(EmbeddedResource.LogicalName)' != ''" >
+        <LogicalName>%(EmbeddedResource.LogicalName)%(Extension)</LogicalName>
+      </EmbeddedResource>
+      <EmbeddedResource Condition="('%(Extension)' == '.vsrepx' or '%(Extension)' == '.repx') and '%(EmbeddedResource.DependentUpon)' != ''" >
+        <DependentUpon></DependentUpon>
+        <ManifestResourceName>%(EmbeddedResource.ManifestResourceName)%(Extension)</ManifestResourceName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+</Project>
