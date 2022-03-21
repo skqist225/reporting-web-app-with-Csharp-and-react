@@ -8,19 +8,25 @@ using System.Collections.Generic;
 
 namespace WebApplication1.Services
 {
-    public class CustomReportProvider : DevExpress.XtraReports.UI.XtraReport,IReportProvider 
+    public class CustomReportProvider : IReportProvider
     {
+
         public XtraReport GetReport(string id, ReportProviderContext context)
         {
-            SqlDataSource sqlDataSource = CreateSQLDataSource();
+            var query = "SELECT DSV_WITH_MAX_DIEMHM.MASV , DSV_WITH_MAX_DIEMHM.TENMH AS TENMH, MAX(DSV_WITH_MAX_DIEMHM.DIEMHM) AS DIEMHM  FROM ("
+                    + "SELECT DSV.MASV, MH.TENMH, (DSV.DIEM_CC * 0.1 + DSV.DIEM_GK * 0.3 + DSV.DIEM_CK * 0.6) AS DIEMHM FROM LOPTINCHI AS LTC inner join("
+                    + "SELECT MASV, MALTC, DIEM_CC, DIEM_GK, DIEM_CK FROM DANGKY WHERE MASV IN (SELECT MASV FROM SINHVIEN WHERE MALOP = N'" + "D15CQCP01" + "') AND HUYDANGKY = 0"
+                    + ") AS DSV ON DSV.MALTC = LTC.MALTC left join(SELECT MAMH, TENMH FROM MONHOC) AS MH ON MH.MAMH = LTC.MAMH"
+                    + ") AS DSV_WITH_MAX_DIEMHM GROUP BY DSV_WITH_MAX_DIEMHM.TENMH, DSV_WITH_MAX_DIEMHM.MASV";
+
+            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(query);
 
             // Creates a new report and assigns the data source.
             XtraReport report = new XtraReport();
             report.DataSource = sqlDataSource;
-            report.DataMember = "SINHVIEN";
+            report.DataMember = "QLDSV_HTC";
 
             addTablesToReport(report, sqlDataSource);
-
             return report;
         }
 
@@ -36,14 +42,14 @@ namespace WebApplication1.Services
             float tableSize = report.PageWidth - report.Margins.Left -report.Margins.Right;
             List<string> fields = new List<string>();
 
-            int rowCount = ((IList)ds.Result["SINHVIEN"]).Count;
+            int rowCount = ((IList)ds.Result["QLDSV_HTC"]).Count;
 
             PageHeaderBand pageHeaderBand = new PageHeaderBand();
 
             if (rowCount > 0)
             {
                 XRTableRow tableRow = new XRTableRow();
-                foreach (DevExpress.DataAccess.Sql.DataApi.IColumn dc in ds.Result["SINHVIEN"].Columns)
+                foreach (DevExpress.DataAccess.Sql.DataApi.IColumn dc in ds.Result["QLDSV_HTC"].Columns)
                 {
                     fields.Add(dc.Name);
 
@@ -90,11 +96,12 @@ namespace WebApplication1.Services
                 {
                     Text = field,
                     WidthF = cellSize,
-                    BackColor = System.Drawing.Color.Gray
+                    BackColor = System.Drawing.Color.LightSkyBlue
                 };
                 tableRow.Cells.Add(cell);
             }
-
+            tableRow.HeightF = 30F;
+            tableRow.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             table.Rows.Add(tableRow);
             table.AdjustSize();
             table.EndInit();
@@ -119,13 +126,14 @@ namespace WebApplication1.Services
                 {
                     Text=field,
                     WidthF= tableSize / fields.Count,
-                    CanGrow = false,
+                    CanGrow = true,
                 };
                 cell.ExpressionBindings.Add(new ExpressionBinding("BeforePrint", "Text", field));
                 row.Cells.Add(cell);
             }
 
             row.HeightF = rowHeight;
+            row.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             table.Rows.Add(row);
 
             table.Font = new System.Drawing.Font("Verdana", 12F);
@@ -134,32 +142,6 @@ namespace WebApplication1.Services
             table.EndInit();
 
             return table;
-        }
-
-        private static SqlDataSource CreateSQLDataSource()
-        {
-            // Creates a data source. 
-            SqlDataSource dataSource = new SqlDataSource("QLDSV_HTC");
-
-            string maLop = "D15CQCP01";
-            CustomSqlQuery query = new CustomSqlQuery();
-            query.Name = "SINHVIEN";
-            query.Sql = "SELECT DSV_WITH_MAX_DIEMHM.MASV , DSV_WITH_MAX_DIEMHM.TENMH AS TENMH, MAX(DSV_WITH_MAX_DIEMHM.DIEMHM) AS DIEMHM  FROM ("
-                    + "SELECT DSV.MASV, MH.TENMH, (DSV.DIEM_CC * 0.1 + DSV.DIEM_GK * 0.3 + DSV.DIEM_CK * 0.6) AS DIEMHM FROM LOPTINCHI AS LTC inner join("
-            + "SELECT MASV, MALTC, DIEM_CC, DIEM_GK, DIEM_CK FROM DANGKY WHERE MASV IN (SELECT MASV FROM SINHVIEN WHERE MALOP = N'" + maLop + "') AND HUYDANGKY = 0"
-            + ") AS DSV ON DSV.MALTC = LTC.MALTC left join(SELECT MAMH, TENMH FROM MONHOC) AS MH ON MH.MAMH = LTC.MAMH"
-            + ") AS DSV_WITH_MAX_DIEMHM GROUP BY DSV_WITH_MAX_DIEMHM.TENMH, DSV_WITH_MAX_DIEMHM.MASV";
-
-            // Creates a SELECT query.
-            //SelectQuery query = SelectQuery
-            //    .create("SINHVIEN")
-            //    .SelectExpression()
-            //    .Build("SINHVIEN");
-
-            // Adds the query to the collection and returns the data source. 
-            dataSource.Queries.Add(query);
-            dataSource.Fill();
-            return dataSource;
         }
     }
 }

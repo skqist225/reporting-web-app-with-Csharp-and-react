@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
+using System.Web.Http;
 using System.Web.Mvc;
 using DevExpress.Web.Mvc.Controllers;
 
@@ -30,6 +34,5 @@ namespace WebApplication1.Controllers
                 base.OnActionExecuting(filterContext);
             }
         }
-
     }
 }

@@ -1,7 +1,6 @@
 ﻿using DevExpress.Web.Mvc.Controllers;
 using System.Web.Mvc;
 
-
 namespace WebApplication1.Controllers
 {
     public class QueryBuilderController : QueryBuilderApiControllerBase

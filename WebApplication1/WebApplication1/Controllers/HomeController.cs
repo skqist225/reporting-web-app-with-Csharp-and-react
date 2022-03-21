@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
-using WebApplication1.Reports;
+﻿using System.Web.Mvc;
 
 namespace WebApplication1.Controllers
 {
@@ -28,18 +23,5 @@ namespace WebApplication1.Controllers
             return View();
         }
 
-        public ActionResult Viewer()
-        {
-            if (Request.QueryString["TableName"] == null)
-                Response.Redirect("Viewer?TableName=Vattu");
-            else
-            {
-                string tableName = Request.QueryString["TableName"];
-                XtraReport1 report = new XtraReport1(tableName);
-                return View(report);
-            }
-
-            return View(new DevExpress.XtraReports.UI.XtraReport());
-        }
     }
 }

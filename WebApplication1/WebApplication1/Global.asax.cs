@@ -9,24 +9,21 @@ using DevExpress.XtraReports.Services;
 using DevExpress.XtraReports.Web.WebDocumentViewer;
 using WebApplication1.Services;
 using DevExpress.XtraReports.Web.Extensions;
-
-public class MyReportStorage : ReportStorageWebExtension
-{
-    // ...
-}
+using System.Web.Http;
 
 namespace WebApplication1
 {
     public class MvcApplication : System.Web.HttpApplication
     {
+
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
+            GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             DefaultWebDocumentViewerContainer.Register<IReportProvider, CustomReportProvider>();
-            ReportStorageWebExtension.RegisterExtensionGlobal(new MyReportStorage());
         }
     }
 }
