@@ -27,5 +27,13 @@ namespace WebApplication1.Controllers
             var query = "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_name = '" + tableName + "'";
             return new ConnectToDatabase().PerformQuery(query);
         }
+
+        [HttpGet]
+        [Route("api/db/table-constraints")]
+        public DataSet TableConstraints(string tableName)
+        {
+            var query = "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '" + tableName + "' AND CONSTRAINT_TYPE = 'FOREIGN KEY'";
+            return new ConnectToDatabase().PerformQuery(query);
+        }
     }
 }
