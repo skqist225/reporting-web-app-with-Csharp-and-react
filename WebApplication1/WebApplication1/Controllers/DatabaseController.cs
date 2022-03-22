@@ -23,8 +23,10 @@ namespace WebApplication1.Controllers
         [Route("api/db/table-properties")]
         public DataSet TableColumn(string tableName)
         {
-            //string tableName = context.Request.Params["tableName"];
-            var query = "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_name = '" + tableName + "'";
+            var query = "SELECT PROPERTIES.COLUMN_NAME,CONSTRAINTS.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.COLUMNS PROPERTIES"
+                + " LEFT JOIN" 
+                + " (SELECT COLUMN_NAME, CONSTRAINT_NAME FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE WHERE table_name ='" + tableName + "' AND CONSTRAINT_NAME NOT LIKE 'UK%') CONSTRAINTS"
+                + " ON CONSTRAINTS.COLUMN_NAME =PROPERTIES.COLUMN_NAME WHERE TABLE_NAME = '" + tableName + "' AND PROPERTIES.COLUMN_NAME <> 'rowguid'";
             return new ConnectToDatabase().PerformQuery(query);
         }
 
@@ -34,24 +36,6 @@ namespace WebApplication1.Controllers
         {
             var query = "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '" + tableName + "' AND CONSTRAINT_TYPE = 'FOREIGN KEY'";
             return new ConnectToDatabase().PerformQuery(query);
-        }
-
-        [Route("api/db/open-report")]
-
-        public XtraReport GetDocument()
-        {
-            var query = "SELECT DSV_WITH_MAX_DIEMHM.MASV , DSV_WITH_MAX_DIEMHM.TENMH AS TENMH, MAX(DSV_WITH_MAX_DIEMHM.DIEMHM) AS DIEMHM  FROM ("
-                  + "SELECT DSV.MASV, MH.TENMH, (DSV.DIEM_CC * 0.1 + DSV.DIEM_GK * 0.3 + DSV.DIEM_CK * 0.6) AS DIEMHM FROM LOPTINCHI AS LTC inner join("
-                  + "SELECT MASV, MALTC, DIEM_CC, DIEM_GK, DIEM_CK FROM DANGKY WHERE MASV IN (SELECT MASV FROM SINHVIEN WHERE MALOP = N'" + "D15CQCP01" + "') AND HUYDANGKY = 0"
-                  + ") AS DSV ON DSV.MALTC = LTC.MALTC left join(SELECT MAMH, TENMH FROM MONHOC) AS MH ON MH.MAMH = LTC.MAMH"
-                  + ") AS DSV_WITH_MAX_DIEMHM GROUP BY DSV_WITH_MAX_DIEMHM.TENMH, DSV_WITH_MAX_DIEMHM.MASV";
-            XtraReport report = new CustomReportProvider().GetReport2(query);
-            using (var ms = new MemoryStream())
-            {
-                report.ExportToPdf(ms);
-                //return File(ms.ToArray(), "application/pdf");
-            }
-            return report;
         }
     }
 }
