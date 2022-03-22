@@ -337,5 +337,6 @@ C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System
 C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System.Threading.Tasks.Extensions.xml
 C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System.Web.Http.xml
 C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System.Web.Http.WebHost.xml
-C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\Microsoft.AspNetCore.Cors.dll
-C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\Microsoft.AspNetCore.Cors.xml
+C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System.Web.Cors.dll
+C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System.Web.Http.Cors.dll
+C:\Users\thuan\Desktop\Project\CDCNPM\WebApplication1\WebApplication1\bin\System.Web.Http.Cors.xml

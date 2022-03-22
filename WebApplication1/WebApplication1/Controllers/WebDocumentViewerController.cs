@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
-using System.Web.Http;
+using System.IO;
 using System.Web.Mvc;
 using DevExpress.Web.Mvc.Controllers;
+using DevExpress.XtraReports.UI;
+using WebApplication1.Services;
 
 namespace WebApplication1.Controllers
 {
@@ -20,6 +16,9 @@ namespace WebApplication1.Controllers
             // CORS preflight request.
             if (this.Request.RequestType == "OPTIONS")
                 return new HttpStatusCodeResult(System.Net.HttpStatusCode.OK);
+
+            if (this.Request.Params["query"] != null) Console.WriteLine(this.Request.Params["query"]);
+
             return base.Invoke();
         }
 
@@ -34,5 +33,6 @@ namespace WebApplication1.Controllers
                 base.OnActionExecuting(filterContext);
             }
         }
+
     }
 }

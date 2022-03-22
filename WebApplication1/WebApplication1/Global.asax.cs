@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using DevExpress.XtraReports.Services;
@@ -10,6 +6,7 @@ using DevExpress.XtraReports.Web.WebDocumentViewer;
 using WebApplication1.Services;
 using DevExpress.XtraReports.Web.Extensions;
 using System.Web.Http;
+using ReportStorageWebExtension = WebApplication1.Services.ReportStorageWebExtension;
 
 namespace WebApplication1
 {
@@ -24,6 +21,7 @@ namespace WebApplication1
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
             DefaultWebDocumentViewerContainer.Register<IReportProvider, CustomReportProvider>();
+            DevExpress.XtraReports.Web.Extensions.ReportStorageWebExtension.RegisterExtensionGlobal(new ReportStorageWebExtension());
         }
     }
 }

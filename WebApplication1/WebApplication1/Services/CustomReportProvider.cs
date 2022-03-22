@@ -19,6 +19,23 @@ namespace WebApplication1.Services
                     + ") AS DSV ON DSV.MALTC = LTC.MALTC left join(SELECT MAMH, TENMH FROM MONHOC) AS MH ON MH.MAMH = LTC.MAMH"
                     + ") AS DSV_WITH_MAX_DIEMHM GROUP BY DSV_WITH_MAX_DIEMHM.TENMH, DSV_WITH_MAX_DIEMHM.MASV";
 
+            string[] parts = id.Split('?');
+            var tableName = parts[0];
+            var queryString = parts.Length > 1 ? parts[1].Split('=')[1] : String.Empty;
+
+            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(queryString != null ? queryString : query);
+
+            // Creates a new report and assigns the data source.
+            XtraReport report = new XtraReport();
+            report.DataSource = sqlDataSource;
+            report.DataMember = tableName;
+
+            addTablesToReport(report, sqlDataSource);
+            return report;
+        }
+
+        public XtraReport GetReport2(string query)
+        {
             SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(query);
 
             // Creates a new report and assigns the data source.
