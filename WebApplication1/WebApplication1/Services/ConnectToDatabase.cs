@@ -20,11 +20,11 @@ namespace WebApplication1.Services
             };
         }
 
-        public SqlDataSource CreateSQLDataSource(String query)
+        public SqlDataSource CreateSQLDataSource(String tableName, String query)
         {
-            SqlDataSource dataSource = new SqlDataSource("QLDSV_HTC");
+            SqlDataSource dataSource = new SqlDataSource(tableName);
             CustomSqlQuery customSqlQuery = new CustomSqlQuery();
-            customSqlQuery.Name = "QLDSV_HTC";
+            customSqlQuery.Name = tableName;
             customSqlQuery.Sql = query;
 
             dataSource.Queries.Add(customSqlQuery);

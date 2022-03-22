@@ -13,7 +13,7 @@ namespace WebApplication1.Services
 
         public XtraReport GetReport(string id, ReportProviderContext context)
         {
-            var query = "SELECT DSV_WITH_MAX_DIEMHM.MASV , DSV_WITH_MAX_DIEMHM.TENMH AS TENMH, MAX(DSV_WITH_MAX_DIEMHM.DIEMHM) AS DIEMHM  FROM ("
+            var defaultQuery = "SELECT DSV_WITH_MAX_DIEMHM.MASV , DSV_WITH_MAX_DIEMHM.TENMH AS TENMH, MAX(DSV_WITH_MAX_DIEMHM.DIEMHM) AS DIEMHM  FROM ("
                     + "SELECT DSV.MASV, MH.TENMH, (DSV.DIEM_CC * 0.1 + DSV.DIEM_GK * 0.3 + DSV.DIEM_CK * 0.6) AS DIEMHM FROM LOPTINCHI AS LTC inner join("
                     + "SELECT MASV, MALTC, DIEM_CC, DIEM_GK, DIEM_CK FROM DANGKY WHERE MASV IN (SELECT MASV FROM SINHVIEN WHERE MALOP = N'" + "D15CQCP01" + "') AND HUYDANGKY = 0"
                     + ") AS DSV ON DSV.MALTC = LTC.MALTC left join(SELECT MAMH, TENMH FROM MONHOC) AS MH ON MH.MAMH = LTC.MAMH"
@@ -21,27 +21,14 @@ namespace WebApplication1.Services
 
             string[] parts = id.Split('?');
             var tableName = parts[0];
-            var queryString = parts.Length > 1 ? parts[1].Split('=')[1] : String.Empty;
+            var queryFromClient = parts.Length > 1 ? parts[1].Split('=')[1] : String.Empty;
 
-            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(queryString != null ? queryString : query);
+            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(tableName, queryFromClient != null ? queryFromClient : defaultQuery);
 
             // Creates a new report and assigns the data source.
             XtraReport report = new XtraReport();
             report.DataSource = sqlDataSource;
             report.DataMember = tableName;
-
-            addTablesToReport(report, sqlDataSource);
-            return report;
-        }
-
-        public XtraReport GetReport2(string query)
-        {
-            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(query);
-
-            // Creates a new report and assigns the data source.
-            XtraReport report = new XtraReport();
-            report.DataSource = sqlDataSource;
-            report.DataMember = "QLDSV_HTC";
 
             addTablesToReport(report, sqlDataSource);
             return report;
