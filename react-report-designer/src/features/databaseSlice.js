@@ -28,15 +28,45 @@ export const fetchTableProperties = createAsyncThunk(
 const initialState = {
     tableNames: [],
     tables: [],
-    // tablesLoading: true,
+    removedTable: '',
+    signToRemoveConnector: false,
 };
 
 const databaseSlice = createSlice({
     name: 'database',
     initialState,
     reducers: {
-        updateTables: (state, { payload }) => {
+        removeTable: (state, { payload }) => {
+            state.signToRemoveConnector = true;
+            state.removedTable = payload;
+        },
+        removeTable2: (state, { payload }) => {
             state.tables = state.tables.filter(({ tableName }) => tableName !== payload);
+            state.tables = state.tables.map(table => ({
+                ...table,
+                connectors:
+                    table.connectors.filter(({ start, end }) => ![start, end].includes(payload)) ||
+                    [],
+            }));
+
+            state.signToRemoveConnector = false;
+        },
+        addConnectors: (state, { payload: { start, end, id } }) => {
+            state.tables = state.tables.map(table => {
+                if ([start, end].includes(table.tableName)) {
+                    return { ...table, connectors: [...table.connectors, { start, end, id }] };
+                }
+
+                return table;
+            });
+        },
+        emptyConnectors: (state, { payload }) => {
+            state.tables = state.tables.map(table => ({
+                ...table,
+                connectors:
+                    table.connectors.filter(({ start, end }) => ![start, end].includes(payload)) ||
+                    [],
+            }));
         },
     },
     extraReducers: builder => {
@@ -46,11 +76,23 @@ const databaseSlice = createSlice({
             })
             .addCase(fetchTableProperties.fulfilled, (state, { payload }) => {
                 const set = new Set([...state.tables]);
-                console.log('before: ' + set);
-                set.add({ tableName: payload.tableName, properties: payload.Table });
-                console.log('after: ' + set);
+
+                payload.Table = payload.Table.map(({ COLUMN_NAME, CONSTRAINT_NAME }, index) => {
+                    return CONSTRAINT_NAME?.includes('FK')
+                        ? {
+                              COLUMN_NAME,
+                              CONSTRAINT_TYPE: 'FK',
+                              COLUMN_REFERENCE: CONSTRAINT_NAME.split('_').pop(),
+                          }
+                        : { COLUMN_NAME, CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') && 'PK' };
+                });
+
+                set.add({
+                    tableName: payload.tableName,
+                    properties: payload.Table,
+                    connectors: [],
+                });
                 state.tables = Array.from(set);
-                // state.tablesLoading = false;
             })
             .addCase(fetchTableProperties.pending, (state, { payload }) => {
                 // state.tablesLoading = true;
@@ -59,7 +101,7 @@ const databaseSlice = createSlice({
 });
 
 export const {
-    actions: { updateTables },
+    actions: { removeTable, addConnectors, emptyConnectors, resetConnectors, removeTable2 },
 } = databaseSlice;
 
 export default databaseSlice.reducer;

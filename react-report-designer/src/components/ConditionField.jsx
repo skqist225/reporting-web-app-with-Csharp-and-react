@@ -11,13 +11,13 @@ import {
     TextField,
 } from '@mui/material';
 
-function ConditionField({field, register, index}) {
+function ConditionField({ field, register, index, setQuery }) {
     const functions = ['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
     const orders = ['ASC', 'DESC'];
-    const operators = ['>', '<', '>=', '<=', '=', '<>'];
+    const operators = ['>', '<', '>=', '<=', '=', '<>', 'LIKE', 'NOT LIKE'];
     function onFunctionChange() {}
     function handleChange() {}
-
+    console.log(field);
     return (
         <div
             key={field.id}
@@ -30,27 +30,19 @@ function ConditionField({field, register, index}) {
             }}
             className='normal-flex'
         >
-            <FormControl sx={{ height: '100%' }}>
-                <InputLabel htmlFor='component-outlined'>Tên trường</InputLabel>
-                <OutlinedInput
-                    id='component-outlined'
-                    defaultValue='a'
-                    label='Tên trường'
-                    readOnly
-                    size='medium'
-                />
-            </FormControl>
-
             <FormControl sx={{ m: 1, width: 200 }}>
                 <InputLabel id='demo-multiple-checkbox-label'>Hàm</InputLabel>
                 <Select
                     labelId='demo-multiple-checkbox-label'
                     id='demo-multiple-checkbox'
-                    value={functions[0]}
+                    value={'Chọn'}
                     label='Hàm'
                     onChange={onFunctionChange}
                     size='small'
                 >
+                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
+                        <ListItemText primary={'Chọn'} />
+                    </MenuItem>
                     {functions.map(fn => (
                         <MenuItem key={fn} value={fn}>
                             <ListItemText primary={fn} />
@@ -59,22 +51,18 @@ function ConditionField({field, register, index}) {
                 </Select>
             </FormControl>
 
-            <div>
-                <FormControlLabel
-                    control={<Checkbox onChange={handleChange} name='gilad' />}
-                    label='Tham gia vào GROUP BY'
-                />
-            </div>
-
             <FormControl sx={{ m: 1, width: 200 }}>
                 <InputLabel id='demo-multiple-checkbox-label'>Sắp xếp</InputLabel>
                 <Select
                     labelId='demo-multiple-checkbox-label'
                     id='demo-multiple-checkbox'
-                    value={orders[0]}
+                    value={'Chọn'}
                     label='Sắp xếp'
                     size='small'
                 >
+                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
+                        <ListItemText primary={'Chọn'} />
+                    </MenuItem>
                     {orders.map(order => (
                         <MenuItem key={order} value={order}>
                             <ListItemText primary={order} />
@@ -82,25 +70,50 @@ function ConditionField({field, register, index}) {
                     ))}
                 </Select>
             </FormControl>
-            <div>
-                <FormControl sx={{ m: 1, width: 200 }}>
-                    <InputLabel id='demo-multiple-checkbox-label'>Sắp xếp</InputLabel>
-                    <Select
-                        labelId='demo-multiple-checkbox-label'
-                        id='demo-multiple-checkbox'
-                        value={operators[0]}
-                        label='Truy vấn'
-                        size='small'
-                    >
-                        {operators.map(operator => (
-                            <MenuItem key={operator} value={operator}>
-                                <ListItemText primary={operator} />
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </div>
-            <TextField id='demo-helper-text-misaligned-no-helper' label='Trường' size='medium' />
+
+            <FormControl sx={{ m: 1, width: 200 }}>
+                <InputLabel id='demo-multiple-checkbox-label'>Sắp xếp</InputLabel>
+                <Select
+                    labelId='demo-multiple-checkbox-label'
+                    id='demo-multiple-checkbox'
+                    value={'Chọn'}
+                    label='Truy vấn'
+                    size='small'
+                >
+                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
+                        <ListItemText primary={'Chọn'} />
+                    </MenuItem>
+                    {operators.map(operator => (
+                        <MenuItem key={operator} value={operator}>
+                            <ListItemText primary={operator} />
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            <TextField id='demo-helper-text-misaligned-no-helper' label='Trường' size='small' />
+
+            <FormControl sx={{ m: 1, width: 200 }}>
+                <InputLabel htmlFor='component-outlined'>Tên cột</InputLabel>
+                <OutlinedInput
+                    id='component-outlined'
+                    defaultValue={field.colName}
+                    label='Tên cột'
+                    readOnly
+                    size='small'
+                />
+            </FormControl>
+
+            <FormControl sx={{ m: 1, width: 200 }}>
+                <InputLabel htmlFor='component-outlined'>Bảng</InputLabel>
+                <OutlinedInput
+                    id='component-outlined'
+                    defaultValue={field.tableName}
+                    label='Bảng'
+                    readOnly
+                    size='small'
+                />
+            </FormControl>
         </div>
     );
 }
