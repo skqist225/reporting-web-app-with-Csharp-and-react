@@ -2,7 +2,7 @@ import React from 'react';
 import { Checkbox } from '@mui/material';
 import { pink } from '@mui/material/colors';
 import { useDispatch } from 'react-redux';
-import { fetchTableProperties, removeTable } from '../features/databaseSlice';
+import { fetchTableProperties, preRemoveTable } from '../features/databaseSlice';
 
 function TableName({ name }) {
     const dispatch = useDispatch();
@@ -11,7 +11,7 @@ function TableName({ name }) {
         const tableName = event.currentTarget.value;
         const checked = event.currentTarget.checked;
         if (checked) dispatch(fetchTableProperties(tableName));
-        else dispatch(removeTable(tableName));
+        else dispatch(preRemoveTable(tableName));
     }
 
     return (

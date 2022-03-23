@@ -4,12 +4,17 @@ import Draggable from 'react-draggable';
 import { Checkbox } from '@mui/material';
 import primary_key from '../primary_key.png';
 import LeaderLine from 'leader-line';
-import { addConnectors, emptyConnectors, removeTable2 } from '../features/databaseSlice';
+import {
+    addConnectors,
+    emptyConnectors,
+    removeTable,
+    updateTableQuery,
+} from '../features/databaseSlice';
 
 import $ from 'jquery';
 import './css/my_drag.css';
 
-function MyDraggableComp({
+function DraggableTable({
     table: { tableName: crtTableName, properties: crtProperties },
     append,
     remove,
@@ -17,6 +22,7 @@ function MyDraggableComp({
 }) {
     const dispatch = useDispatch();
     const { tables, signToRemoveConnector, removedTable } = useSelector(state => state.database);
+    const [fieldsInSelectStatement, setFieldsInSelectStatement] = useState([]);
 
     function drawConnector(startElement, endElement) {
         const start = document.querySelector(startElement);
@@ -28,8 +34,8 @@ function MyDraggableComp({
             hide: true,
             path: 'grid',
         }).setOptions({
-            startSocket: 'right',
-            endSocket: 'top',
+            startSocket: 'auto',
+            endSocket: 'auto',
         });
         line.show('draw');
         return line._id;
@@ -76,7 +82,7 @@ function MyDraggableComp({
             removeConnectors(
                 tables.filter(({ tableName }) => tableName === crtTableName)[0].connectors
             );
-            dispatch(removeTable2(crtTableName));
+            dispatch(removeTable(crtTableName));
         }
     }, [signToRemoveConnector]);
 
@@ -98,20 +104,71 @@ function MyDraggableComp({
             dispatch(addConnectors(line));
         });
     }
-
+    // let selectFields = [];
     function onChange(event) {
         event.stopPropagation();
         const checked = event.currentTarget.checked;
         const val = $(event.currentTarget).val().split('?');
-        const query = `SELECT ${val[1]}.${val[0]} FROM ${val[1]}`;
-
+        let localQuery = '';
         if (checked) {
-            append({ colName: val[0], tableName: val[1] });
-            setQuery(query);
+            setFieldsInSelectStatement(prevFields => [...prevFields, `${val[0]}.${val[1]}`]);
+            append({ colName: val[1], tableName: val[0] });
+            setFieldsInSelectStatement(prevFields => {
+                localQuery = `SELECT ${prevFields.join(`,`)} FROM ${val[0]}`;
+                dispatch(updateTableQuery({ tableName: val[0], tableQuery: localQuery }));
+                return prevFields;
+            });
         } else {
-            remove({ colName: val[0], tableName: val[1] });
+            setFieldsInSelectStatement(prevFields =>
+                prevFields.filter(field => field !== `${val[0]}.${val[1]}`)
+            );
+            remove({ colName: val[1], tableName: val[0] });
+            setFieldsInSelectStatement(prevFields => {
+                localQuery = `SELECT ${prevFields.join(`, `)} FROM ${val[0]}`;
+                dispatch(
+                    updateTableQuery({
+                        tableName: val[0],
+                        tableQuery: prevFields.length === 0 ? '' : localQuery,
+                    })
+                );
+                return prevFields;
+            });
         }
     }
+
+    useEffect(() => {
+        const finalString = 'SELECT * FROM ';
+        let queries = [];
+        tables.forEach(({ tableQuery, tableName }) => {
+            if (tableQuery) {
+                queries.push(`(${tableQuery}) AS ${tableName}`);
+            }
+        });
+        const constraints = [];
+        tables.forEach(({ properties, tableName }) => {
+            properties.forEach(({ COLUMN_NAME, COLUMN_REFERENCE }) => {
+                if (COLUMN_REFERENCE === crtTableName) {
+                    constraints.push({
+                        fkTable: tableName,
+                        pkTable: crtTableName,
+                        fieldRef: COLUMN_NAME,
+                    });
+                }
+            });
+        });
+        let joinBy = ',';
+        let joinOnField = '';
+        constraints.forEach(({ fkTable, pkTable, fieldRef }) => {
+            if ([fkTable, pkTable].includes(crtTableName)) {
+                console.log('true');
+                joinBy = ' JOIN ';
+                joinOnField = ` ON ${fkTable}.${fieldRef} = ${pkTable}.${fieldRef}`;
+                return;
+            }
+        });
+
+        queries.length ? setQuery(finalString + queries.join(joinBy) + joinOnField) : setQuery('');
+    }, [tables]);
 
     return (
         <div style={{ marginRight: '50px' }}>
@@ -172,7 +229,7 @@ function MyDraggableComp({
                                     >
                                         <Checkbox
                                             onChange={onChange}
-                                            value={COLUMN_NAME + '?' + crtTableName}
+                                            value={crtTableName + '?' + COLUMN_NAME}
                                         />
                                         <span style={{ fontSize: '14px' }}>{COLUMN_NAME}</span>
                                         {CONSTRAINT_TYPE === 'PK' && (
@@ -188,4 +245,4 @@ function MyDraggableComp({
     );
 }
 
-export default MyDraggableComp;
+export default DraggableTable;

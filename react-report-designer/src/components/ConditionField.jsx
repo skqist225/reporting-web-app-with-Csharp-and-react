@@ -10,21 +10,22 @@ import {
     Select,
     TextField,
 } from '@mui/material';
+import { useSelector } from 'react-redux';
 
 function ConditionField({ field, register, index, setQuery }) {
+    const { tables } = useSelector(state => state.database);
     const functions = ['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
     const orders = ['ASC', 'DESC'];
     const operators = ['>', '<', '>=', '<=', '=', '<>', 'LIKE', 'NOT LIKE'];
     function onFunctionChange() {}
     function handleChange() {}
-    console.log(field);
+    // console.log(field);
     return (
         <div
             key={field.id}
             {...register(`test.${index}.value`)}
             style={{
                 height: '60px',
-                // border: '1px solid blue',
                 borderRadius: '4px',
                 marginBottom: '5px',
             }}
@@ -53,6 +54,26 @@ function ConditionField({ field, register, index, setQuery }) {
 
             <FormControl sx={{ m: 1, width: 200 }}>
                 <InputLabel id='demo-multiple-checkbox-label'>Sắp xếp</InputLabel>
+                <Select
+                    labelId='demo-multiple-checkbox-label'
+                    id='demo-multiple-checkbox'
+                    value={'Chọn'}
+                    label='Sắp xếp'
+                    size='small'
+                >
+                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
+                        <ListItemText primary={'Chọn'} />
+                    </MenuItem>
+                    {orders.map(order => (
+                        <MenuItem key={order} value={order}>
+                            <ListItemText primary={order} />
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            <FormControl sx={{ m: 1, width: 200 }}>
+                <InputLabel id='demo-multiple-checkbox-label'>Nhập bảng</InputLabel>
                 <Select
                     labelId='demo-multiple-checkbox-label'
                     id='demo-multiple-checkbox'

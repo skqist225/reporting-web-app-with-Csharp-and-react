@@ -30,17 +30,18 @@ const initialState = {
     tables: [],
     removedTable: '',
     signToRemoveConnector: false,
+    isHavingLocalQuery: false,
 };
 
 const databaseSlice = createSlice({
     name: 'database',
     initialState,
     reducers: {
-        removeTable: (state, { payload }) => {
+        preRemoveTable: (state, { payload }) => {
             state.signToRemoveConnector = true;
             state.removedTable = payload;
         },
-        removeTable2: (state, { payload }) => {
+        removeTable: (state, { payload }) => {
             state.tables = state.tables.filter(({ tableName }) => tableName !== payload);
             state.tables = state.tables.map(table => ({
                 ...table,
@@ -68,6 +69,12 @@ const databaseSlice = createSlice({
                     [],
             }));
         },
+        updateTableQuery: (state, { payload: { tableName, tableQuery } }) => {
+            state.tables = state.tables.map(table => ({
+                ...table,
+                tableQuery: table.tableName === tableName ? tableQuery : table.tableQuery,
+            }));
+        },
     },
     extraReducers: builder => {
         builder
@@ -91,6 +98,7 @@ const databaseSlice = createSlice({
                     tableName: payload.tableName,
                     properties: payload.Table,
                     connectors: [],
+                    tableQuery: '',
                 });
                 state.tables = Array.from(set);
             })
@@ -101,7 +109,14 @@ const databaseSlice = createSlice({
 });
 
 export const {
-    actions: { removeTable, addConnectors, emptyConnectors, resetConnectors, removeTable2 },
+    actions: {
+        removeTable,
+        addConnectors,
+        emptyConnectors,
+        resetConnectors,
+        preRemoveTable,
+        updateTableQuery,
+    },
 } = databaseSlice;
 
 export default databaseSlice.reducer;
