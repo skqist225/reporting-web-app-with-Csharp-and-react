@@ -1,30 +1,26 @@
-export default function buildTableJoin(tables, tblName, desiredJoinBy) {
-    let joinBy = ',';
-    let joinOnField = '';
-    let refCol = '';
+export default function buildTableJoin(tables, crtTable, desiredJoinBy) {
+    let allJoinableOfCrtTable = [];
+
     if (tables.length >= 2) {
-        let isCrtTableHavingFieldOnSelect = false;
-        const {
-            tableQuery: { fieldsInSelect, fieldsInFunction },
-        } = tables.filter(({ tableName }) => tableName === tblName)[0];
-        if (fieldsInSelect?.length || fieldsInFunction?.length)
-            isCrtTableHavingFieldOnSelect = true;
-
-        console.log(tblName);
-
-        tables.forEach(({ connectors, tableName, tableQuery }) => {
-            if (isCrtTableHavingFieldOnSelect && tableName !== tblName) {
+        const { connectors } = tables.filter(({ tableName }) => tableName === crtTable)[0];
+        tables.forEach(({ tableName, tableQuery: { fieldsInSelect, fieldsInFunction } }) => {
+            if (tableName !== crtTable) {
                 connectors.forEach(({ start, end, refColumn }) => {
-                    console.log({ start, end, refColumn });
-                    if ([start, end].includes(tblName)) {
-                        joinBy = desiredJoinBy;
-                        joinOnField = ` ON ${start}.${refColumn} = ${end}.${refColumn}`;
-                        refCol = refColumn;
+                    if (
+                        [start, end].includes(tableName) &&
+                        (fieldsInSelect?.length || fieldsInFunction?.length)
+                    ) {
+                        allJoinableOfCrtTable.push({
+                            joinBy: desiredJoinBy,
+                            joinOnField: ` ON ${start}.${refColumn} = ${end}.${refColumn}`,
+                            refCol: refColumn,
+                            between: [start, end],
+                        });
                     }
                 });
             }
         });
     }
 
-    return [joinBy, joinOnField, refCol];
+    return allJoinableOfCrtTable;
 }

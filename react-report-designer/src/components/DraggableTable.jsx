@@ -147,35 +147,128 @@ function DraggableTable({
 
     useEffect(() => {
         const finalString = 'SELECT * FROM ';
-        let queries = [];
-        tables.forEach(({ tableQuery, tableName }) => {
-            tableQuery &&
-                buildTableQuery(tables, tableName) &&
-                queries.push(`(${buildTableQuery(tables, tableName)}) AS ${tableName}`);
-        });
         const desiredJoinBy = ' JOIN ';
-        const [joinBy, joinOnField, refCol] = buildTableJoin(
-            tables,
-            crtTableName,
-            desiredJoinBy,
-            dispatch
-        );
-        if (joinBy === desiredJoinBy) {
-            queries = queries.map(query => {
-                const joinField = `${query.split('AS')[1].trim()}.${refCol}`;
-                if (query.includes(joinField)) return query;
-                else {
-                    const selectPart =
-                        query.split('FROM')[0].replace('(SELECT', '').trim() + `, ${joinField}`;
-                    return `(SELECT ${selectPart} FROM ${query.split('AS')[1].trim()}) AS ${query
-                        .split('AS')[1]
-                        .trim()}`;
-                }
-            });
+        const queries = new Map(),
+            allJoinableOfCrtTable = [];
+        tables.forEach(({ tableQuery, tableName }) => {
+            const buildedTableQuery = buildTableQuery(tables, tableName);
+            if (buildedTableQuery) queries.set(tableName, `(${buildedTableQuery}) AS ${tableName}`);
+
+            allJoinableOfCrtTable.push(...buildTableJoin(tables, tableName, desiredJoinBy));
+        });
+
+        const uniqueJoins = allJoinableOfCrtTable.reduce((acc, curr) => {
+            if (!acc.some(e => e.joinOnField === curr.joinOnField)) acc.push(curr);
+            return acc;
+        }, []);
+        let concatJoinString = '';
+
+        function addJoinColToFinalTableQuery(finalTableQuery, joinField, tableName) {
+            if (finalTableQuery.includes(joinField)) {
+                return finalTableQuery;
+            } else {
+                const selectPart =
+                    finalTableQuery.split('FROM')[0].replace('(SELECT', '').trim() +
+                    `, ${joinField}`;
+
+                return `(SELECT ${selectPart} FROM ${tableName}) AS ${tableName}`;
+            }
         }
 
-        queries.length ? setQuery(finalString + queries.join(joinBy) + joinOnField) : setQuery('');
+        if (queries.size === 1)
+            concatJoinString = Array.from(queries.values())[0] && Array.from(queries.values())[0];
+        else if (queries.size === 2) {
+            const [joinBy, joinOnField, refCol] = uniqueJoins.reduce((acc, curr) => {
+                if (
+                    curr.between.includes(Array.from(queries.keys())[0]) &&
+                    curr.between.includes(Array.from(queries.keys())[1])
+                ) {
+                    acc.push(curr.joinBy);
+                    acc.push(curr.joinOnField);
+                    acc.push(curr.refCol);
+                }
+                return acc;
+            }, []);
+
+            for (const [tableName, finalTableQuery] of queries.entries()) {
+                const appendedJoinColToTableQuery = addJoinColToFinalTableQuery(
+                    finalTableQuery,
+                    `${tableName}.${refCol}`,
+                    tableName
+                );
+
+                if (appendedJoinColToTableQuery)
+                    queries.set(tableName, appendedJoinColToTableQuery);
+            }
+
+            concatJoinString = Array.from(queries.values()).join(joinBy) + joinOnField;
+        } else {
+            let result = uniqueJoins.reduce(
+                (acc, { joinBy, joinOnField, refCol, between }, index) => {
+                    let orgStartTable = queries.get(between[0]);
+                    let orgEndTable = queries.get(between[1]);
+                    const startTable = addJoinColToFinalTableQuery(
+                        orgStartTable,
+                        `${between[0]}.${refCol}`,
+                        between[0]
+                    );
+                    const endTable = addJoinColToFinalTableQuery(
+                        orgEndTable,
+                        `${between[1]}.${refCol}`,
+                        between[1]
+                    );
+
+                    const concatTwoTable = [startTable, joinBy, endTable, joinOnField];
+                    acc.push({
+                        orgStartTable,
+                        orgEndTable,
+                        concatTwoTable,
+                    });
+                    if (
+                        acc[index - 1]?.orgStartTable === orgStartTable ||
+                        acc[index - 1]?.orgEndTable === orgStartTable
+                    ) {
+                        //last el of prev item;
+                        const prev = acc[index - 1];
+                        acc[index - 1] = {
+                            ...acc[index - 1],
+                            concatTwoTable: [
+                                prev.concatTwoTable[0],
+                                prev.concatTwoTable[1],
+                                addJoinColToFinalTableQuery(
+                                    acc[index - 1].concatTwoTable[2],
+                                    `${between[0]}.${refCol}`,
+                                    between[0]
+                                ),
+                                prev.concatTwoTable[3],
+                            ],
+                        };
+
+                        acc[index] = {
+                            ...acc[index],
+                            concatTwoTable: [
+                                acc[index].concatTwoTable[1],
+                                acc[index].concatTwoTable[2],
+                                acc[index].concatTwoTable[3],
+                            ],
+                        };
+                    }
+                    return acc;
+                },
+                []
+            );
+
+            result = result.map(({ concatTwoTable }) => concatTwoTable).flat();
+            concatJoinString = result.join(' ');
+        }
+
+        queries.size ? setQuery(finalString + concatJoinString) : setQuery('');
     }, [tables]);
+
+    function onMouseDown(e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
 
     return (
         <div style={{ marginRight: '50px' }}>
@@ -236,6 +329,8 @@ function DraggableTable({
                                     >
                                         <Checkbox
                                             onChange={onChange}
+                                            // onClick={onClick}
+                                            onMouseDown={onMouseDown}
                                             value={crtTableName + '?' + COLUMN_NAME}
                                         />
                                         <span style={{ fontSize: '14px' }}>{COLUMN_NAME}</span>
