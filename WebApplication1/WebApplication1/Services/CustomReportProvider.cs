@@ -23,7 +23,7 @@ namespace WebApplication1.Services
             var tableName = parts[0];
             var queryFromClient = parts.Length > 1 ? parts[1].Split('=')[1] : String.Empty;
 
-            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(tableName, queryFromClient != null ? queryFromClient : defaultQuery);
+            SqlDataSource sqlDataSource = new ConnectToDatabase().CreateSQLDataSource(tableName, queryFromClient != null ? queryFromClient.Replace("EQUAL","=") : defaultQuery);
 
             // Creates a new report and assigns the data source.
             XtraReport report = new XtraReport();

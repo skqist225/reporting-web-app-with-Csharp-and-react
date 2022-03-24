@@ -22,14 +22,14 @@ namespace WebApplication1.Services
 
         public SqlDataSource CreateSQLDataSource(String tableName, String query)
         {
-            SqlDataSource dataSource = new SqlDataSource(tableName);
-            CustomSqlQuery customSqlQuery = new CustomSqlQuery();
-            customSqlQuery.Name = tableName;
-            customSqlQuery.Sql = query;
+                SqlDataSource dataSource = new SqlDataSource(tableName);
+                CustomSqlQuery customSqlQuery = new CustomSqlQuery();
+                customSqlQuery.Name = tableName;
+                customSqlQuery.Sql = query;
 
-            dataSource.Queries.Add(customSqlQuery);
-            dataSource.Fill();
-            return dataSource;
+                dataSource.Queries.Add(customSqlQuery);
+                dataSource.Fill();
+                return dataSource;
         }
 
         public DataSet PerformQuery(String query)

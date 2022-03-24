@@ -8,11 +8,13 @@ import {
     addConnectors,
     emptyConnectors,
     removeTable,
-    updateTableQuery,
+    updateFieldsInSelect,
 } from '../features/databaseSlice';
 
 import $ from 'jquery';
 import './css/my_drag.css';
+import buildTableQuery from '../helpers/buildTableQuery';
+import buildTableJoin from '../helpers/buildTableJoin';
 
 function DraggableTable({
     table: { tableName: crtTableName, properties: crtProperties },
@@ -53,20 +55,22 @@ function DraggableTable({
     useEffect(() => {
         let localConnectors = [];
         tables.forEach(({ properties, tableName }) => {
-            properties.forEach(({ COLUMN_REFERENCE }) => {
+            properties.forEach(({ COLUMN_REFERENCE, COLUMN_NAME }) => {
                 if (COLUMN_REFERENCE && COLUMN_REFERENCE === crtTableName) {
                     localConnectors.push({
                         start: tableName,
                         end: crtTableName,
+                        refColumn: COLUMN_NAME,
                         id: drawConnector(`.${tableName}`, `.${crtTableName}`),
                     });
                 }
             });
-            crtProperties.forEach(({ COLUMN_REFERENCE }) => {
+            crtProperties.forEach(({ COLUMN_REFERENCE, COLUMN_NAME }) => {
                 if (COLUMN_REFERENCE && COLUMN_REFERENCE === tableName) {
                     localConnectors.push({
                         start: crtTableName,
                         end: tableName,
+                        refColumn: COLUMN_NAME,
                         id: drawConnector(`.${crtTableName}`, `.${tableName}`),
                     });
                 }
@@ -86,15 +90,19 @@ function DraggableTable({
         }
     }, [signToRemoveConnector]);
 
-    function onDragStop() {
+    function onDragStop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
         const { connectors } = tables.filter(({ tableName }) => tableName === crtTableName)[0];
         removeConnectors(connectors);
 
         const localConnectors = [];
-        connectors.forEach(({ start, end }) => {
+        connectors.forEach(({ start, end, refColumn }) => {
             localConnectors.push({
                 start,
                 end,
+                refColumn,
                 id: drawConnector('.' + start, '.' + end),
             });
         });
@@ -107,31 +115,32 @@ function DraggableTable({
     // let selectFields = [];
     function onChange(event) {
         event.stopPropagation();
-        const checked = event.currentTarget.checked;
-        const val = $(event.currentTarget).val().split('?');
-        let localQuery = '';
+
+        const { checked, value } = event.currentTarget;
+        const [tableName, colName] = value.split('?');
+
         if (checked) {
-            setFieldsInSelectStatement(prevFields => [...prevFields, `${val[0]}.${val[1]}`]);
-            append({ colName: val[1], tableName: val[0] });
-            setFieldsInSelectStatement(prevFields => {
-                localQuery = `SELECT ${prevFields.join(`,`)} FROM ${val[0]}`;
-                dispatch(updateTableQuery({ tableName: val[0], tableQuery: localQuery }));
-                return prevFields;
+            setFieldsInSelectStatement(crtFields => [...crtFields, tableName + '.' + colName]);
+            append({ colName, tableName });
+
+            setFieldsInSelectStatement(crtFields => {
+                dispatch(updateFieldsInSelect({ tableName, fieldsInSelect: crtFields }));
+                return crtFields;
             });
         } else {
-            setFieldsInSelectStatement(prevFields =>
-                prevFields.filter(field => field !== `${val[0]}.${val[1]}`)
+            setFieldsInSelectStatement(crtFields =>
+                crtFields.filter(field => field !== `${tableName}.${colName}`)
             );
-            remove({ colName: val[1], tableName: val[0] });
-            setFieldsInSelectStatement(prevFields => {
-                localQuery = `SELECT ${prevFields.join(`, `)} FROM ${val[0]}`;
+            remove({ colName, tableName });
+
+            setFieldsInSelectStatement(crtFields => {
                 dispatch(
-                    updateTableQuery({
-                        tableName: val[0],
-                        tableQuery: prevFields.length === 0 ? '' : localQuery,
+                    updateFieldsInSelect({
+                        tableName,
+                        fieldsInSelect: crtFields,
                     })
                 );
-                return prevFields;
+                return crtFields;
             });
         }
     }
@@ -140,32 +149,30 @@ function DraggableTable({
         const finalString = 'SELECT * FROM ';
         let queries = [];
         tables.forEach(({ tableQuery, tableName }) => {
-            if (tableQuery) {
-                queries.push(`(${tableQuery}) AS ${tableName}`);
-            }
+            tableQuery &&
+                buildTableQuery(tables, tableName) &&
+                queries.push(`(${buildTableQuery(tables, tableName)}) AS ${tableName}`);
         });
-        const constraints = [];
-        tables.forEach(({ properties, tableName }) => {
-            properties.forEach(({ COLUMN_NAME, COLUMN_REFERENCE }) => {
-                if (COLUMN_REFERENCE === crtTableName) {
-                    constraints.push({
-                        fkTable: tableName,
-                        pkTable: crtTableName,
-                        fieldRef: COLUMN_NAME,
-                    });
+        const desiredJoinBy = ' JOIN ';
+        const [joinBy, joinOnField, refCol] = buildTableJoin(
+            tables,
+            crtTableName,
+            desiredJoinBy,
+            dispatch
+        );
+        if (joinBy === desiredJoinBy) {
+            queries = queries.map(query => {
+                const joinField = `${query.split('AS')[1].trim()}.${refCol}`;
+                if (query.includes(joinField)) return query;
+                else {
+                    const selectPart =
+                        query.split('FROM')[0].replace('(SELECT', '').trim() + `, ${joinField}`;
+                    return `(SELECT ${selectPart} FROM ${query.split('AS')[1].trim()}) AS ${query
+                        .split('AS')[1]
+                        .trim()}`;
                 }
             });
-        });
-        let joinBy = ',';
-        let joinOnField = '';
-        constraints.forEach(({ fkTable, pkTable, fieldRef }) => {
-            if ([fkTable, pkTable].includes(crtTableName)) {
-                console.log('true');
-                joinBy = ' JOIN ';
-                joinOnField = ` ON ${fkTable}.${fieldRef} = ${pkTable}.${fieldRef}`;
-                return;
-            }
-        });
+        }
 
         queries.length ? setQuery(finalString + queries.join(joinBy) + joinOnField) : setQuery('');
     }, [tables]);

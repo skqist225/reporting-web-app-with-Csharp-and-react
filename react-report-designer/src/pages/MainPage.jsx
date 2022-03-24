@@ -24,7 +24,10 @@ function MainPage() {
     }, []);
 
     function printReport() {
-        window.location.href = `${window.location.origin}/report?query=${query}`;
+        window.location.href = `${window.location.origin}/report?query=${query.replace(
+            /=/g,
+            'EQUAL'
+        )}`;
     }
 
     return (
@@ -44,7 +47,7 @@ function MainPage() {
                         defaultValue={query}
                         readOnly
                     />
-                    <div style={{ position: 'absolute', top: '0', right: '0' }}>
+                    <div style={{ position: 'absolute', bottom: '0', right: '0' }}>
                         <Fab
                             variant='extended'
                             color='primary'

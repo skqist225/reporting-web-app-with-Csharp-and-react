@@ -11,9 +11,7 @@ function ReportPage() {
             {
                 reportUrl: ko.observable(
                     `QLDSV_HTC?query=${
-                        search.get('query')
-                            ? search.get('query').toString()
-                            : 'SELECT * FROM SINHVIEN'
+                        search.get('query') ? search.get('query') : 'SELECT * FROM SINHVIEN'
                     }`
                 ),
                 requestOptions: {

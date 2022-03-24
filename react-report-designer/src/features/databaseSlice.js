@@ -52,10 +52,13 @@ const databaseSlice = createSlice({
 
             state.signToRemoveConnector = false;
         },
-        addConnectors: (state, { payload: { start, end, id } }) => {
+        addConnectors: (state, { payload: { start, end, refColumn, id } }) => {
             state.tables = state.tables.map(table => {
                 if ([start, end].includes(table.tableName)) {
-                    return { ...table, connectors: [...table.connectors, { start, end, id }] };
+                    return {
+                        ...table,
+                        connectors: [...table.connectors, { start, end, refColumn, id }],
+                    };
                 }
 
                 return table;
@@ -69,10 +72,13 @@ const databaseSlice = createSlice({
                     [],
             }));
         },
-        updateTableQuery: (state, { payload: { tableName, tableQuery } }) => {
+        updateFieldsInSelect: (state, { payload: { tableName, fieldsInSelect } }) => {
             state.tables = state.tables.map(table => ({
                 ...table,
-                tableQuery: table.tableName === tableName ? tableQuery : table.tableQuery,
+                tableQuery:
+                    table.tableName === tableName
+                        ? { ...table.tableQuery, fieldsInSelect }
+                        : table.tableQuery,
             }));
         },
     },
@@ -81,10 +87,10 @@ const databaseSlice = createSlice({
             .addCase(fetchTableNames.fulfilled, (state, { payload }) => {
                 state.tableNames = payload.Table;
             })
-            .addCase(fetchTableProperties.fulfilled, (state, { payload }) => {
+            .addCase(fetchTableProperties.fulfilled, (state, { payload: { tableName, Table } }) => {
                 const set = new Set([...state.tables]);
 
-                payload.Table = payload.Table.map(({ COLUMN_NAME, CONSTRAINT_NAME }, index) => {
+                Table = Table.map(({ COLUMN_NAME, CONSTRAINT_NAME }, index) => {
                     return CONSTRAINT_NAME?.includes('FK')
                         ? {
                               COLUMN_NAME,
@@ -95,10 +101,15 @@ const databaseSlice = createSlice({
                 });
 
                 set.add({
-                    tableName: payload.tableName,
-                    properties: payload.Table,
+                    tableName,
+                    properties: Table,
                     connectors: [],
-                    tableQuery: '',
+                    tableQuery: {
+                        fieldsInSelect: [],
+                        fieldsInFunction: [],
+                        fieldsInWhere: [],
+                        fieldsInOrderBy: [],
+                    },
                 });
                 state.tables = Array.from(set);
             })
@@ -115,7 +126,7 @@ export const {
         emptyConnectors,
         resetConnectors,
         preRemoveTable,
-        updateTableQuery,
+        updateFieldsInSelect,
     },
 } = databaseSlice;
 
