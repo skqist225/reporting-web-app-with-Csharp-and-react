@@ -1,4 +1,4 @@
-export default function buildTableJoin(tables, crtTable, desiredJoinBy) {
+export default function buildTableJoin(tables, crtTable, desiredJoinBy, queries) {
     let allJoinableOfCrtTable = [];
 
     if (tables.length >= 2) {
@@ -7,6 +7,8 @@ export default function buildTableJoin(tables, crtTable, desiredJoinBy) {
             if (tableName !== crtTable) {
                 connectors.forEach(({ start, end, refColumn }) => {
                     if (
+                        queries.get(start) &&
+                        queries.get(end) &&
                         [start, end].includes(tableName) &&
                         (fieldsInSelect?.length || fieldsInFunction?.length)
                     ) {
