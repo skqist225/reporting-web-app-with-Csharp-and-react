@@ -233,9 +233,11 @@ function DraggableTable({
                                         [vOrgStartTable, vOrgEndTable].includes(orgStartTable) &&
                                         crtIdx !== index
                                     ) {
-                                        const isStart = vOrgStartTable === orgStartTable ? 0 : 2;
                                         //last el of prev item;
                                         if (acc[crtIdx] && acc[index]) {
+                                            const isStart =
+                                                vOrgStartTable === orgStartTable ? 0 : 2;
+                                            console.log(isStart);
                                             console.log(acc[crtIdx]);
                                             console.log(between[0]);
                                             console.log(between[1]);
@@ -243,7 +245,7 @@ function DraggableTable({
                                             acc[crtIdx] = {
                                                 ...acc[crtIdx],
                                                 concatTwoTable: [
-                                                    isStart
+                                                    isStart === 0
                                                         ? addJoinColumnToSelect(
                                                               acc[crtIdx].concatTwoTable[0],
                                                               `${acc[crtIdx].concatTwoTable[0]
@@ -255,18 +257,22 @@ function DraggableTable({
                                                           )
                                                         : acc[crtIdx].concatTwoTable[0],
                                                     acc[crtIdx].concatTwoTable[1],
-                                                    isStart
-                                                        ? acc[crtIdx].concatTwoTable[2]
-                                                        : addJoinColumnToSelect(
+                                                    isStart === 2
+                                                        ? addJoinColumnToSelect(
                                                               acc[crtIdx].concatTwoTable[2],
-                                                              `${
-                                                                  between[isStart === 0 ? 0 : 1]
-                                                              }.${refCol}`,
-                                                              between[isStart === 0 ? 0 : 1]
-                                                          ),
+                                                              `${acc[crtIdx].concatTwoTable[2]
+                                                                  .split('AS')[1]
+                                                                  .trim()}.${refCol}`,
+                                                              acc[crtIdx].concatTwoTable[2]
+                                                                  .split('AS')[1]
+                                                                  .trim()
+                                                          )
+                                                        : acc[crtIdx].concatTwoTable[2],
                                                     acc[crtIdx].concatTwoTable[3],
                                                 ],
                                             };
+                                            console.log(acc[index]);
+
                                             acc[index] = {
                                                 ...acc[index],
                                                 concatTwoTable: [
