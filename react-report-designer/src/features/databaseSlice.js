@@ -81,6 +81,15 @@ const databaseSlice = createSlice({
                         : table.tableQuery,
             }));
         },
+        updateFieldsInWhere: (state, { payload: { tableName, fieldsInWhere } }) => {
+            state.tables = state.tables.map(table => ({
+                ...table,
+                tableQuery:
+                    table.tableName === tableName
+                        ? { ...table.tableQuery, fieldsInWhere }
+                        : table.tableQuery,
+            }));
+        },
     },
     extraReducers: builder => {
         builder
@@ -90,14 +99,19 @@ const databaseSlice = createSlice({
             .addCase(fetchTableProperties.fulfilled, (state, { payload: { tableName, Table } }) => {
                 const set = new Set([...state.tables]);
 
-                Table = Table.map(({ COLUMN_NAME, CONSTRAINT_NAME }, index) => {
+                Table = Table.map(({ COLUMN_NAME, CONSTRAINT_NAME, DATA_TYPE }, index) => {
                     return CONSTRAINT_NAME?.includes('FK')
                         ? {
                               COLUMN_NAME,
                               CONSTRAINT_TYPE: 'FK',
                               COLUMN_REFERENCE: CONSTRAINT_NAME.split('_').pop(),
+                              DATA_TYPE,
                           }
-                        : { COLUMN_NAME, CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') && 'PK' };
+                        : {
+                              COLUMN_NAME,
+                              CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') && 'PK',
+                              DATA_TYPE,
+                          };
                 });
 
                 set.add({
@@ -127,6 +141,7 @@ export const {
         resetConnectors,
         preRemoveTable,
         updateFieldsInSelect,
+        updateFieldsInWhere,
     },
 } = databaseSlice;
 

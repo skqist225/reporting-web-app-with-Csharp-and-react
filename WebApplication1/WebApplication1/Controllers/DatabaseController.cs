@@ -23,11 +23,7 @@ namespace WebApplication1.Controllers
         [Route("api/db/table-properties")]
         public DataSet TableColumn(string tableName)
         {
-            var query = "SELECT PROPERTIES.COLUMN_NAME,CONSTRAINTS.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.COLUMNS PROPERTIES"
-                + " LEFT JOIN" 
-                + " (SELECT COLUMN_NAME, CONSTRAINT_NAME FROM INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE WHERE table_name ='" + tableName + "' AND CONSTRAINT_NAME NOT LIKE 'UK%') CONSTRAINTS"
-                + " ON CONSTRAINTS.COLUMN_NAME =PROPERTIES.COLUMN_NAME WHERE TABLE_NAME = '" + tableName + "' AND PROPERTIES.COLUMN_NAME <> 'rowguid'";
-            return new ConnectToDatabase().PerformQuery(query);
+            return new ConnectToDatabase().PerformQuery("EXEC GET_TABLE_INFO @tableName=N'" + tableName +"'");
         }
 
         [HttpGet]

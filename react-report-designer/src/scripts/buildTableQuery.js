@@ -4,6 +4,7 @@ export default function buildTableQuery(tables, crtTableName) {
         if (tableName === crtTableName) {
             let queryParts = [];
             Object.keys(tableQuery).forEach(partName => {
+                console.log(tableQuery[partName]);
                 if (!tableQuery[partName]?.length) {
                     //continue
                 } else {
@@ -70,7 +71,7 @@ export default function buildTableQuery(tables, crtTableName) {
                         break;
                     }
                 }
-                finalQuery += ` FROM ${crtTableName}`;
+                if (!finalQuery.includes('FROM')) finalQuery += ` FROM ${crtTableName}`;
 
                 if (partName === 'fieldsInWhere') {
                     finalQuery += ` WHERE ${content}`;

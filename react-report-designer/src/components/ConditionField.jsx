@@ -10,16 +10,54 @@ import {
     Select,
     TextField,
 } from '@mui/material';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+
+import $ from 'jquery';
+import { updateFieldsInWhere } from '../features/databaseSlice';
+import { operators } from './data_define/data_define';
 
 function ConditionField({ field, register, index, setQuery }) {
+    const dispatch = useDispatch();
     const { tables } = useSelector(state => state.database);
-    const functions = ['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
-    const orders = ['ASC', 'DESC'];
-    const operators = ['>', '<', '>=', '<=', '=', '<>', 'LIKE', 'NOT LIKE'];
-    function onFunctionChange() {}
-    function handleChange() {}
-    // console.log(field);
+    const [selectedOperator, setSelectedOperator] = React.useState('Chọn');
+    const [selectedFunction, setSelectedFunction] = React.useState('Chọn');
+    const [selectedOrderby, setSelectedOrderBy] = React.useState('Chọn');
+
+    const functions = ['Chọn', 'COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
+    const orders = ['Chọn', 'ASC', 'DESC'];
+
+    function onFunctionChange(e) {
+        setSelectedFunction(e.target.value);
+    }
+
+    function onOrderByChange(e) {
+        setSelectedOrderBy(e.target.value);
+    }
+
+    function onConditionChange(e) {
+        setSelectedOperator(e.target.value);
+    }
+
+    function onExpressionChange(e) {
+        if (selectedOperator && selectedOperator !== 'Chọn') {
+            dispatch(
+                updateFieldsInWhere({
+                    tableName: field.tableName,
+                    fieldsInWhere: [
+                        {
+                            name: `${field.tableName}.${field.colName}`,
+                            conditon: selectedOperator,
+                            expression: e.target.value,
+                        },
+                    ],
+                })
+            );
+        }
+    }
+
+    let { colName, tableName, dataType } = field;
+    dataType = dataType.toLowerCase().includes('char') ? 'char' : 'number';
+
     return (
         <div
             key={field.id}
@@ -36,14 +74,11 @@ function ConditionField({ field, register, index, setQuery }) {
                 <Select
                     labelId='demo-multiple-checkbox-label'
                     id='demo-multiple-checkbox'
-                    value={'Chọn'}
+                    value={selectedFunction}
                     label='Hàm'
                     onChange={onFunctionChange}
                     size='small'
                 >
-                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
-                        <ListItemText primary={'Chọn'} />
-                    </MenuItem>
                     {functions.map(fn => (
                         <MenuItem key={fn} value={fn}>
                             <ListItemText primary={fn} />
@@ -57,13 +92,11 @@ function ConditionField({ field, register, index, setQuery }) {
                 <Select
                     labelId='demo-multiple-checkbox-label'
                     id='demo-multiple-checkbox'
-                    value={'Chọn'}
+                    value={selectedOrderby}
                     label='Sắp xếp'
                     size='small'
+                    onChange={onOrderByChange}
                 >
-                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
-                        <ListItemText primary={'Chọn'} />
-                    </MenuItem>
                     {orders.map(order => (
                         <MenuItem key={order} value={order}>
                             <ListItemText primary={order} />
@@ -72,53 +105,49 @@ function ConditionField({ field, register, index, setQuery }) {
                 </Select>
             </FormControl>
 
-            <FormControl sx={{ m: 1, width: 200 }}>
-                <InputLabel id='demo-multiple-checkbox-label'>Nhập bảng</InputLabel>
-                <Select
-                    labelId='demo-multiple-checkbox-label'
-                    id='demo-multiple-checkbox'
-                    value={'Chọn'}
-                    label='Sắp xếp'
-                    size='small'
-                >
-                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
-                        <ListItemText primary={'Chọn'} />
-                    </MenuItem>
-                    {orders.map(order => (
-                        <MenuItem key={order} value={order}>
-                            <ListItemText primary={order} />
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+            <div className='normal-flex'>
+                <FormControl sx={{ m: 1, width: 200 }}>
+                    <InputLabel id='demo-multiple-checkbox-label'>Điều kiện truy vấn</InputLabel>
+                    <Select
+                        labelId='demo-multiple-checkbox-label'
+                        id='demo-multiple-checkbox'
+                        value={selectedOperator}
+                        label='Điều kiện truy vấn'
+                        size='small'
+                        onChange={onConditionChange}
+                    >
+                        {operators.map(({ dataTypeCanUse, value }, index) => {
+                            if (dataTypeCanUse.includes('*'))
+                                return (
+                                    <MenuItem key={value} value={value}>
+                                        <ListItemText primary={value} />
+                                    </MenuItem>
+                                );
 
-            <FormControl sx={{ m: 1, width: 200 }}>
-                <InputLabel id='demo-multiple-checkbox-label'>Sắp xếp</InputLabel>
-                <Select
-                    labelId='demo-multiple-checkbox-label'
-                    id='demo-multiple-checkbox'
-                    value={'Chọn'}
-                    label='Truy vấn'
+                            if (dataTypeCanUse.includes(dataType)) {
+                                return (
+                                    <MenuItem key={value} value={value}>
+                                        <ListItemText primary={value} />
+                                    </MenuItem>
+                                );
+                            }
+                        })}
+                    </Select>
+                </FormControl>
+                <TextField
+                    id='demo-helper-text-misaligned-no-helper'
+                    label='Giá trị'
                     size='small'
-                >
-                    <MenuItem key={'Chọn'} value={'Chọn'} readOnly>
-                        <ListItemText primary={'Chọn'} />
-                    </MenuItem>
-                    {operators.map(operator => (
-                        <MenuItem key={operator} value={operator}>
-                            <ListItemText primary={operator} />
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            <TextField id='demo-helper-text-misaligned-no-helper' label='Trường' size='small' />
+                    style={{ height: '100%' }}
+                    onChange={onExpressionChange}
+                />
+            </div>
 
             <FormControl sx={{ m: 1, width: 200 }}>
                 <InputLabel htmlFor='component-outlined'>Tên cột</InputLabel>
                 <OutlinedInput
                     id='component-outlined'
-                    defaultValue={field.colName}
+                    defaultValue={colName}
                     label='Tên cột'
                     readOnly
                     size='small'
@@ -129,7 +158,7 @@ function ConditionField({ field, register, index, setQuery }) {
                 <InputLabel htmlFor='component-outlined'>Bảng</InputLabel>
                 <OutlinedInput
                     id='component-outlined'
-                    defaultValue={field.tableName}
+                    defaultValue={tableName}
                     label='Bảng'
                     readOnly
                     size='small'
