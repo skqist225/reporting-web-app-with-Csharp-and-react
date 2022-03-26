@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import ko from 'knockout';
 import { useSearchParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 
 function ReportPage() {
     const [search] = useSearchParams();
-    console.log(search.get('query'));
 
     useEffect(() => {
         ko.applyBindings(

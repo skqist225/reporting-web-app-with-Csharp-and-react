@@ -112,6 +112,9 @@ const databaseSlice = createSlice({
                         : table.tableQuery,
             }));
         },
+        resetIsValid: (state, { payload }) => {
+            state.isValid = null;
+        },
     },
     extraReducers: builder => {
         builder
@@ -169,6 +172,7 @@ export const {
         updateFieldsInSelect,
         updateFieldsInWhere,
         updateFieldsInFunction,
+        resetIsValid,
     },
 } = databaseSlice;
 

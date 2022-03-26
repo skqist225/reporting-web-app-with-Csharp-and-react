@@ -9,6 +9,7 @@ import {
     emptyConnectors,
     removeTable,
     updateFieldsInSelect,
+    updateFieldsInWhere,
 } from '../features/databaseSlice';
 
 import $ from 'jquery';
@@ -140,6 +141,17 @@ function DraggableTable({
                         fieldsInSelect: crtFields,
                     })
                 );
+                let {
+                    tableQuery: { fieldsInWhere },
+                } = tables.filter(({ tableName: tblName }) => tblName === tableName)[0];
+                dispatch(
+                    updateFieldsInWhere({
+                        tableName,
+                        fieldsInWhere: fieldsInWhere.filter(
+                            ({ name }) => name !== `${tableName}.${colName}`
+                        ),
+                    })
+                );
                 return crtFields;
             });
         }
@@ -153,7 +165,6 @@ function DraggableTable({
     return (
         <div style={{ marginRight: '50px' }}>
             <Draggable
-                style={{ width: 'fit-content !important' }}
                 defaultClassName={'react-draggable my-draggable ' + crtTableName}
                 defaultPosition={{ x: 0, y: 0 }}
                 position={null}
@@ -213,7 +224,6 @@ function DraggableTable({
                                     >
                                         <Checkbox
                                             onChange={onChange}
-                                            // onClick={onClick}
                                             onMouseDown={onMouseDown}
                                             value={
                                                 crtTableName + '?' + COLUMN_NAME + '?' + DATA_TYPE

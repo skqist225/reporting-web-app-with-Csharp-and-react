@@ -14,22 +14,31 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import $ from 'jquery';
 import { updateFieldsInWhere, updateFieldsInFunction } from '../features/databaseSlice';
-import { operators } from './data_define/data_define';
+import { functions, operators, orders } from './data_define/data_define';
 
-function ConditionField({ field, register, index, setQuery }) {
+function ConditionField({ field, register, index }) {
     const dispatch = useDispatch();
     const { tables } = useSelector(state => state.database);
     const [selectedOperator, setSelectedOperator] = React.useState('Chọn');
     const [selectedFunction, setSelectedFunction] = React.useState('Chọn');
     const [selectedOrderby, setSelectedOrderBy] = React.useState('Chọn');
+    const [expression, setExpression] = React.useState('');
 
-    const functions = ['Chọn', 'COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
-    const orders = ['Chọn', 'ASC', 'DESC'];
+    let { colName, tableName, dataType } = field;
+    dataType =
+        dataType.toLowerCase() === 'nvarchar'
+            ? 'nvarchar'
+            : ['char', 'nchar', 'varchar'].includes(dataType)
+            ? 'char'
+            : 'number';
+    let {
+        tableQuery: { fieldsInWhere },
+    } = tables.filter(({ tableName: tblName }) => tblName === tableName)[0];
 
     function onFunctionChange(e) {
         // setSelectedFunction(e.target.value);
 
-        if (e.target.value && e.target.value !== 'Chọn') {
+        if (e.target.value !== 'Chọn') {
             dispatch(
                 updateFieldsInFunction({
                     tableName: field.tableName,
@@ -41,8 +50,7 @@ function ConditionField({ field, register, index, setQuery }) {
                     ],
                 })
             );
-        }
-        if (e.target.value === 'Chọn') {
+        } else {
             dispatch(
                 updateFieldsInFunction({
                     tableName: field.tableName,
@@ -63,61 +71,108 @@ function ConditionField({ field, register, index, setQuery }) {
 
     function onConditionChange(e) {
         setSelectedOperator(e.target.value);
+        if (e.target.value === 'Chọn') {
+            dispatch(
+                updateFieldsInWhere({
+                    tableName,
+                    fieldsInWhere: fieldsInWhere.filter(
+                        ({ name }) => name !== `${tableName}.${colName}`
+                    ),
+                })
+            );
+            setExpression('');
+        } else {
+            const stringTemplate =
+                dataType === 'nvarchar'
+                    ? `N'${expression}'`
+                    : dataType.includes('char')
+                    ? `'${expression}'`
+                    : expression;
+
+            const indexOfCrtFieldInWhere = fieldsInWhere.findIndex(
+                ({ name }) => name === `${tableName}.${colName}`
+            );
+            if (indexOfCrtFieldInWhere !== -1) {
+                dispatch(
+                    updateFieldsInWhere({
+                        tableName,
+                        fieldsInWhere: fieldsInWhere.map((value, index) => {
+                            if (index === indexOfCrtFieldInWhere)
+                                return {
+                                    ...value,
+                                    conditon: e.target.value,
+                                };
+
+                            return value;
+                        }),
+                    })
+                );
+            } else {
+                if (expression) {
+                    dispatch(
+                        updateFieldsInWhere({
+                            tableName,
+                            fieldsInWhere: [
+                                ...fieldsInWhere,
+                                {
+                                    name: `${tableName}.${colName}`,
+                                    conditon: e.target.value,
+                                    expression: stringTemplate,
+                                },
+                            ],
+                        })
+                    );
+                }
+            }
+        }
     }
 
     function onExpressionChange(e) {
-        const {
-            tableQuery: { fieldsInWhere },
-        } = tables.filter(({ tableName: tblName }) => tblName === tableName)[0];
+        setExpression(e.target.value);
 
         if (selectedOperator && selectedOperator !== 'Chọn') {
-            // fieldsInWhere.includes();
-            const stringTemplate = dataType.includes('n')
-                ? `N'${e.target.value}'`
-                : dataType.includes('char')
-                ? `'${e.target.value}'`
-                : e.target.value;
-
-            const set = new Set([
-                // ...fieldsInWhere,
-                {
-                    name: `${field.tableName}.${field.colName}`,
-                    conditon: selectedOperator,
-                    expression: stringTemplate,
-                },
-            ]);
-
-            dispatch(
-                updateFieldsInWhere({
-                    tableName: field.tableName,
-                    fieldsInWhere: Array.from(set),
-                })
-            );
-        }
-
-        if (e.target.value === 'Chọn') {
-            fieldsInWhere = fieldsInWhere.filter(({ name, conditon, expression }) =>
-                name === `${field.tableName}.${field.colName}` &&
-                conditon === selectedOperator &&
-                expression === 'char'
+            const stringTemplate =
+                dataType === 'nvarchar'
+                    ? `N'${e.target.value}'`
+                    : dataType.includes('char')
                     ? `'${e.target.value}'`
-                    : e.target.value
+                    : e.target.value;
+
+            const indexOfCrtFieldInWhere = fieldsInWhere.findIndex(
+                ({ name }) => name === `${tableName}.${colName}`
             );
-            dispatch(
-                updateFieldsInWhere({
-                    tableName: field.tableName,
-                    fieldsInWhere,
-                })
-            );
+            if (indexOfCrtFieldInWhere !== -1) {
+                dispatch(
+                    updateFieldsInWhere({
+                        tableName,
+                        fieldsInWhere: fieldsInWhere.map((value, index) => {
+                            if (index === indexOfCrtFieldInWhere)
+                                return {
+                                    ...value,
+                                    expression: stringTemplate,
+                                };
+
+                            return value;
+                        }),
+                    })
+                );
+            } else {
+                dispatch(
+                    updateFieldsInWhere({
+                        tableName,
+                        fieldsInWhere: [
+                            ...fieldsInWhere,
+                            {
+                                name: `${tableName}.${colName}`,
+                                conditon: selectedOperator,
+                                expression: stringTemplate,
+                            },
+                        ],
+                    })
+                );
+            }
         }
     }
-
-    let { colName, tableName, dataType } = field;
-    dataType = dataType.toLowerCase().includes('nvar')
-        ? 'nchar'
-        : dataType.toLowerCase().includes('char')
-        ? 'char'
-        : 'number';
 
     return (
         <div
@@ -184,7 +239,6 @@ function ConditionField({ field, register, index, setQuery }) {
                                         <ListItemText primary={value} />
                                     </MenuItem>
                                 );
-
                             if (dataTypeCanUse.includes(dataType)) {
                                 return (
                                     <MenuItem key={value} value={value}>
@@ -200,6 +254,7 @@ function ConditionField({ field, register, index, setQuery }) {
                     label='Giá trị'
                     size='small'
                     style={{ height: '100%' }}
+                    value={expression}
                     onChange={onExpressionChange}
                 />
             </div>
