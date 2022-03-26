@@ -33,5 +33,12 @@ namespace WebApplication1.Controllers
             var query = "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = '" + tableName + "' AND CONSTRAINT_TYPE = 'FOREIGN KEY'";
             return new ConnectToDatabase().PerformQuery(query);
         }
+
+        [HttpGet]
+        [Route("api/db/is-valid-query")]
+        public string isValidQuery(string query)
+        {
+            return new ConnectToDatabase().PerformQuery(query.Replace("EQUAL", "=")) == null ? "invalid" : "valid";
+        }
     }
 }

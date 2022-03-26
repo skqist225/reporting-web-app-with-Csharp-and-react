@@ -6,7 +6,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import ListTableName from '../components/ListTableName';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchTableNames } from '../features/databaseSlice';
+import { fetchTableNames, isValidQuery } from '../features/databaseSlice';
 import DraggableTable from '../components/DraggableTable';
 import addJoinColumnToSelect from '../scripts/addJoinColumnToSelect';
 import buildTableJoin from '../scripts/buildTableJoin';
@@ -15,7 +15,7 @@ import buildTableQuery from '../scripts/buildTableQuery';
 function MainPage() {
     const dispatch = useDispatch();
     const [query, setQuery] = useState('');
-    const { tableNames, tables } = useSelector(state => state.database);
+    const { tableNames, tables, isValid } = useSelector(state => state.database);
     const { control, register } = useForm();
     const { fields, append, prepend, remove, swap, move, insert } = useFieldArray({
         control, // control props comes from useForm (optional: if you are using FormContext)
@@ -27,11 +27,20 @@ function MainPage() {
     }, []);
 
     function printReport() {
-        window.location.href = `${window.location.origin}/report?query=${query.replace(
-            /=/g,
-            'EQUAL'
-        )}`;
+        dispatch(isValidQuery(query.replace(/=/g, 'EQUAL')));
     }
+
+    useEffect(() => {
+        if (isValid) {
+            window.open(
+                `${window.location.origin}/report?query=${query.replace(/=/g, 'EQUAL')}`,
+                '_blank' // <- This is what makes it open in a new window.
+            );
+        }
+        if (isValid === false) {
+            alert('query is invalid;');
+        }
+    }, [isValid]);
 
     useEffect(() => {
         let finalString = 'SELECT * FROM ';
@@ -40,7 +49,6 @@ function MainPage() {
             allJoinableOfCrtTable = [];
         tables.forEach(({ tableQuery, tableName }) => {
             const buildedTableQuery = buildTableQuery(tables, tableName);
-            console.log(buildedTableQuery);
             if (buildedTableQuery) queries.set(tableName, `(${buildedTableQuery}) AS ${tableName}`);
         });
         tables.forEach(({ tableName }) => {
@@ -54,7 +62,6 @@ function MainPage() {
             return acc;
         }, []);
         let concatJoinString = '';
-
         if (queries.size === 1)
             concatJoinString = Array.from(queries.values())[0] && Array.from(queries.values())[0];
         else if (queries.size === 2) {
@@ -125,6 +132,9 @@ function MainPage() {
                                         if (acc[crtIdx] && acc[index]) {
                                             const isStart =
                                                 vOrgStartTable === orgStartTable ? 0 : 2;
+                                            // console.log('orgStartTable');
+                                            // console.log(`crtIndex ${crtIdx}: `, acc[crtIdx]);
+                                            // console.log(`index ${index}: `, acc[index]);
 
                                             acc[crtIdx] = {
                                                 ...acc[crtIdx],
@@ -155,16 +165,34 @@ function MainPage() {
                                                     acc[crtIdx].concatTwoTable[3],
                                                 ],
                                             };
-                                            console.log(acc[index]);
 
-                                            acc[index] = {
-                                                ...acc[index],
-                                                concatTwoTable: [
-                                                    acc[index].concatTwoTable[1],
-                                                    acc[index].concatTwoTable[2],
-                                                    acc[index].concatTwoTable[3],
-                                                ],
-                                            };
+                                            const indexConcatTwoTableLength =
+                                                acc[index].concatTwoTable.length;
+                                            if (indexConcatTwoTableLength === 4)
+                                                acc[index] = {
+                                                    ...acc[index],
+                                                    concatTwoTable: [
+                                                        acc[index].concatTwoTable[1],
+                                                        acc[index].concatTwoTable[2],
+                                                        acc[index].concatTwoTable[3],
+                                                    ],
+                                                };
+                                            if (indexConcatTwoTableLength === 3) {
+                                                acc[crtIdx] = {
+                                                    ...acc[crtIdx],
+                                                    concatTwoTable: [
+                                                        acc[crtIdx].concatTwoTable[1],
+                                                        acc[crtIdx].concatTwoTable[0],
+                                                        acc[crtIdx].concatTwoTable[3],
+                                                    ],
+                                                };
+
+                                                const temp = acc[index];
+                                                acc[index] = acc[crtIdx];
+                                                acc[crtIdx] = temp;
+                                                // console.log(`index : ${index}`, acc[index]);
+                                                // console.log(`crtIndex : ${crtIdx}`, acc[crtIdx]);
+                                            }
                                         }
                                     }
 
@@ -172,8 +200,12 @@ function MainPage() {
                                         [vOrgStartTable, vOrgEndTable].includes(orgEndTable) &&
                                         crtIdx !== index
                                     ) {
+                                        // console.log('orgEndTable');
+                                        // console.log(`crtIndex ${crtIdx}: `, acc[crtIdx]);
+                                        // console.log(`index ${index}: `, acc[index]);
+
                                         //last el of prev item;
-                                        if (acc[index]) {
+                                        if (acc[index] && acc[index].concatTwoTable.length === 4) {
                                             acc[index] = {
                                                 ...acc[index],
                                                 concatTwoTable: [
@@ -193,8 +225,10 @@ function MainPage() {
                 []
             );
             //if field was added by addJoincolumn function will be not showned on select of final query string.
+
             result = result
                 .map(({ concatTwoTable }, index) => {
+                    console.log('concatTwoTable: ', concatTwoTable);
                     if (index === 0) return concatTwoTable;
                     if (concatTwoTable[0].includes('SELECT')) return [',', ...concatTwoTable];
                     return concatTwoTable;
@@ -217,9 +251,11 @@ function MainPage() {
                 tablesNotJoinWithTheRest.push(queries.get(tableName));
             }
         });
+        console.log(tablesNotJoinWithTheRest);
         if (tablesNotJoinWithTheRest.length)
             finalString += concatJoinString + ',' + tablesNotJoinWithTheRest.join(',');
         else finalString += concatJoinString;
+
         queries.size ? setQuery(finalString) : setQuery('');
     }, [tables]);
 

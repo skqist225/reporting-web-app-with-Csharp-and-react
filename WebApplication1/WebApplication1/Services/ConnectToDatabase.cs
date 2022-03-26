@@ -34,17 +34,26 @@ namespace WebApplication1.Services
 
         public DataSet PerformQuery(String query)
         {
-            if(sqlConnection != null) sqlConnection.Close();
-            sqlConnection.Open();
-
-            SqlDataAdapter sda = new SqlDataAdapter()
-            {
-                SelectCommand = new SqlCommand(query, sqlConnection)
-            };
-
             DataSet ds = new DataSet();
-            sda.Fill(ds);
-            sqlConnection.Close();
+            try
+            {
+                if (sqlConnection != null) sqlConnection.Close();
+                sqlConnection.Open();
+
+                SqlDataAdapter sda = new SqlDataAdapter()
+                {
+                    SelectCommand = new SqlCommand(query, sqlConnection)
+                };
+                sda.Fill(ds);
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+            finally
+            {
+                sqlConnection.Close();
+            }
 
             return ds;
         }

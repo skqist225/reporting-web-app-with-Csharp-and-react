@@ -20,27 +20,27 @@ export const operators = [
         value: '<=',
     },
     {
-        dataTypeCanUse: ['number', 'char'],
+        dataTypeCanUse: ['number', 'char', 'nchar'],
         value: '=',
     },
     {
-        dataTypeCanUse: ['number', 'char'],
+        dataTypeCanUse: ['number', 'char', 'nchar'],
         value: '<>',
     },
     {
-        dataTypeCanUse: ['char'],
+        dataTypeCanUse: ['char', 'nchar'],
         value: 'LIKE',
     },
     {
-        dataTypeCanUse: ['char'],
+        dataTypeCanUse: ['char', 'nchar'],
         value: 'NOT LIKE',
     },
     {
-        dataTypeCanUse: ['number', 'char'],
+        dataTypeCanUse: ['number', 'char', 'nchar'],
         value: 'IN',
     },
     {
-        dataTypeCanUse: ['number', 'char'],
+        dataTypeCanUse: ['number', 'char', 'nchar'],
         value: 'NOT IN',
     },
 ];

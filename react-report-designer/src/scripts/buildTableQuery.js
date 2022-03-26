@@ -4,7 +4,6 @@ export default function buildTableQuery(tables, crtTableName) {
         if (tableName === crtTableName) {
             let queryParts = [];
             Object.keys(tableQuery).forEach(partName => {
-                console.log(tableQuery[partName]);
                 if (!tableQuery[partName]?.length) {
                     //continue
                 } else {

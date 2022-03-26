@@ -77,7 +77,8 @@ namespace WebApplication1.Services
                 label.Width = 500;
                 label.Font = new System.Drawing.Font("Verdana", 30F, FontStyle.Bold);
                 label.Text = string.Format("There's no data to display or the table doesn't exist.");
-                report.Bands[BandKind.PageHeader].Controls.Add(label);
+                pageHeaderBand.Controls.Add(label);
+                report.Bands.Add(pageHeaderBand);
             }
 
             report.Bands.Add(pageHeaderBand);

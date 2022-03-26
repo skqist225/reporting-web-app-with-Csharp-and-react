@@ -13,7 +13,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 
 import $ from 'jquery';
-import { updateFieldsInWhere } from '../features/databaseSlice';
+import { updateFieldsInWhere, updateFieldsInFunction } from '../features/databaseSlice';
 import { operators } from './data_define/data_define';
 
 function ConditionField({ field, register, index, setQuery }) {
@@ -27,7 +27,34 @@ function ConditionField({ field, register, index, setQuery }) {
     const orders = ['Chọn', 'ASC', 'DESC'];
 
     function onFunctionChange(e) {
-        setSelectedFunction(e.target.value);
+        // setSelectedFunction(e.target.value);
+
+        if (e.target.value && e.target.value !== 'Chọn') {
+            dispatch(
+                updateFieldsInFunction({
+                    tableName: field.tableName,
+                    fieldsInFunction: [
+                        {
+                            name: `${field.tableName}.${field.colName}`,
+                            aggregateFunction: e.target.value,
+                        },
+                    ],
+                })
+            );
+        }
+        if (e.target.value === 'Chọn') {
+            dispatch(
+                updateFieldsInFunction({
+                    tableName: field.tableName,
+                    fieldsInFunction: [
+                        //    {
+                        //        name: `${field.tableName}.${field.colName}`,
+                        //        aggregateFunction: e.target.value,
+                        //    },
+                    ],
+                })
+            );
+        }
     }
 
     function onOrderByChange(e) {
@@ -39,24 +66,58 @@ function ConditionField({ field, register, index, setQuery }) {
     }
 
     function onExpressionChange(e) {
+        const {
+            tableQuery: { fieldsInWhere },
+        } = tables.filter(({ tableName: tblName }) => tblName === tableName)[0];
+
         if (selectedOperator && selectedOperator !== 'Chọn') {
+            // fieldsInWhere.includes();
+            const stringTemplate = dataType.includes('n')
+                ? `N'${e.target.value}'`
+                : dataType.includes('char')
+                ? `'${e.target.value}'`
+                : e.target.value;
+
+            const set = new Set([
+                // ...fieldsInWhere,
+                {
+                    name: `${field.tableName}.${field.colName}`,
+                    conditon: selectedOperator,
+                    expression: stringTemplate,
+                },
+            ]);
+
             dispatch(
                 updateFieldsInWhere({
                     tableName: field.tableName,
-                    fieldsInWhere: [
-                        {
-                            name: `${field.tableName}.${field.colName}`,
-                            conditon: selectedOperator,
-                            expression: e.target.value,
-                        },
-                    ],
+                    fieldsInWhere: Array.from(set),
+                })
+            );
+        }
+
+        if (e.target.value === 'Chọn') {
+            fieldsInWhere = fieldsInWhere.filter(({ name, conditon, expression }) =>
+                name === `${field.tableName}.${field.colName}` &&
+                conditon === selectedOperator &&
+                expression === 'char'
+                    ? `'${e.target.value}'`
+                    : e.target.value
+            );
+            dispatch(
+                updateFieldsInWhere({
+                    tableName: field.tableName,
+                    fieldsInWhere,
                 })
             );
         }
     }
 
     let { colName, tableName, dataType } = field;
-    dataType = dataType.toLowerCase().includes('char') ? 'char' : 'number';
+    dataType = dataType.toLowerCase().includes('nvar')
+        ? 'nchar'
+        : dataType.toLowerCase().includes('char')
+        ? 'char'
+        : 'number';
 
     return (
         <div

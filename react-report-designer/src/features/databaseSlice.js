@@ -25,12 +25,25 @@ export const fetchTableProperties = createAsyncThunk(
     }
 );
 
+export const isValidQuery = createAsyncThunk(
+    'database/isValidQuery',
+    async (query, { dispatch, getState, rejectWithValue }) => {
+        try {
+            const data = await api.get(`/db/is-valid-query?query=${query}`);
+            return { data };
+        } catch ({ data: { errorMessage } }) {
+            rejectWithValue(errorMessage);
+        }
+    }
+);
+
 const initialState = {
     tableNames: [],
     tables: [],
     removedTable: '',
     signToRemoveConnector: false,
     isHavingLocalQuery: false,
+    isValid: null,
 };
 
 const databaseSlice = createSlice({
@@ -90,6 +103,15 @@ const databaseSlice = createSlice({
                         : table.tableQuery,
             }));
         },
+        updateFieldsInFunction: (state, { payload: { tableName, fieldsInFunction } }) => {
+            state.tables = state.tables.map(table => ({
+                ...table,
+                tableQuery:
+                    table.tableName === tableName
+                        ? { ...table.tableQuery, fieldsInFunction }
+                        : table.tableQuery,
+            }));
+        },
     },
     extraReducers: builder => {
         builder
@@ -129,6 +151,10 @@ const databaseSlice = createSlice({
             })
             .addCase(fetchTableProperties.pending, (state, { payload }) => {
                 // state.tablesLoading = true;
+            })
+            .addCase(isValidQuery.fulfilled, (state, { payload }) => {
+                if (payload.data === 'valid') state.isValid = true;
+                else state.isValid = false;
             });
     },
 });
@@ -142,6 +168,7 @@ export const {
         preRemoveTable,
         updateFieldsInSelect,
         updateFieldsInWhere,
+        updateFieldsInFunction,
     },
 } = databaseSlice;
 
