@@ -78,6 +78,7 @@ export default function buildFinalQuery(tables) {
                     orgEndTable,
                     concatTwoTable,
                 });
+
                 if (index === 0) {
                 } else {
                     acc.forEach(
@@ -89,9 +90,10 @@ export default function buildFinalQuery(tables) {
                                 //last el of prev item;
                                 if (acc[crtIdx] && acc[index]) {
                                     const isStart = vOrgStartTable === orgStartTable ? 0 : 2;
-                                    console.log('orgStartTable');
-                                    console.log(`crtIndex ${crtIdx}: `, acc[crtIdx]);
-                                    console.log(`index ${index}: `, acc[index]);
+                                    // console.log('--------------------------------------------');
+                                    // console.log('orgStartTable');
+                                    // console.log(`crtIndex ${crtIdx}: `, acc[crtIdx]);
+                                    // console.log(`index ${index}: `, acc[index]);
 
                                     const [addColRef, isStartModified2] = addJoinColumnToSelect(
                                         acc[crtIdx].concatTwoTable[isStart],
@@ -124,16 +126,71 @@ export default function buildFinalQuery(tables) {
 
                                     const indexConcatTwoTableLength =
                                         acc[index].concatTwoTable.length;
-                                    if (indexConcatTwoTableLength === 4)
-                                        acc[index] = {
-                                            ...acc[index],
-                                            concatTwoTable: [
-                                                acc[index].concatTwoTable[1],
-                                                acc[index].concatTwoTable[2],
-                                                acc[index].concatTwoTable[3],
-                                            ],
-                                        };
+                                    if (indexConcatTwoTableLength === 4) {
+                                        //remove select statement to join existing table
+                                        acc[index].concatTwoTable.shift();
+
+                                        const indexOfDuplicatedJoin = acc.findIndex(
+                                            ({ concatTwoTable }, idx) => {
+                                                if (
+                                                    idx > crtIdx &&
+                                                    idx < index &&
+                                                    concatTwoTable[0].trim() === 'JOIN' &&
+                                                    concatTwoTable[1] ===
+                                                        acc[index].concatTwoTable[1]
+                                                ) {
+                                                    return idx;
+                                                }
+                                            }
+                                        );
+                                        console.log(indexOfDuplicatedJoin);
+
+                                        if (indexOfDuplicatedJoin !== -1) {
+                                            for (
+                                                let i = crtIdx + 1;
+                                                i <= indexOfDuplicatedJoin;
+                                                i++
+                                            ) {
+                                                if (acc[i].concatTwoTable[0].includes('SELECT')) {
+                                                    acc[i].concatTwoTable[0] =
+                                                        ' JOIN ' +
+                                                        acc[i].concatTwoTable[0] +
+                                                        acc[indexOfDuplicatedJoin]
+                                                            .concatTwoTable[2];
+
+                                                    console.log(acc[index]);
+
+                                                    //shift left
+
+                                                    //store the rest of query
+                                                    const shiftLeftArray = acc.filter(
+                                                        (_, position) =>
+                                                            position >= i &&
+                                                            position < index &&
+                                                            position !== indexOfDuplicatedJoin
+                                                    );
+                                                    acc[i] = acc[index];
+                                                    acc = acc.filter((v, idx) => idx <= i);
+                                                    // console.log(shiftLeftArray);
+                                                    // console.log(acc[index]);
+
+                                                    // acc[indexOfDuplicatedJoin] = acc[index];
+                                                    // console.log('acc', acc);
+                                                    shiftLeftArray.forEach(query =>
+                                                        acc.push(query)
+                                                    );
+                                                    // acc[i] = acc[index];
+
+                                                    console.log(acc);
+
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     if (indexConcatTwoTableLength === 3) {
+                                        //join
                                         acc[crtIdx] = {
                                             ...acc[crtIdx],
                                             concatTwoTable: [
@@ -156,7 +213,7 @@ export default function buildFinalQuery(tables) {
                                                     .split('AS')[1]
                                                     .trim()}.${refCol}`
                                             );
-                                        console.log(addColRefForJoinedTable);
+                                        // console.log(addColRefForJoinedTable);
                                         acc[index] = {
                                             ...acc[index],
                                             concatTwoTable: [
@@ -178,9 +235,9 @@ export default function buildFinalQuery(tables) {
                                 crtIdx !== index
                             ) {
                                 //last el of prev item;
-                                console.log('orgEndTable');
-                                console.log(`crtIndex ${crtIdx}: `, acc[crtIdx]);
-                                console.log(`index ${index}: `, acc[index]);
+                                // console.log('orgEndTable');
+                                // console.log(`crtIndex ${crtIdx}: `, acc[crtIdx]);
+                                // console.log(`index ${index}: `, acc[index]);
 
                                 if (acc[index] && acc[index].concatTwoTable.length === 4) {
                                     acc[index] = {
@@ -225,11 +282,11 @@ export default function buildFinalQuery(tables) {
             return acc;
         }, []);
         //if field was added by addJoincolumn function will be not showned on select of final query string.
-
+        console.log(result.map(({ concatTwoTable }) => concatTwoTable));
         result = result
             .map(({ concatTwoTable }, index) => {
                 if (index === 0) return concatTwoTable;
-                if (concatTwoTable[0].includes('SELECT')) return [',', ...concatTwoTable];
+                if (!concatTwoTable[0]?.includes('JOIN')) return [',', ...concatTwoTable];
                 return concatTwoTable;
             })
             .flat();
@@ -251,7 +308,7 @@ export default function buildFinalQuery(tables) {
         }
         joinSelectParts.push(selectPart);
     }
-    finalString = finalString.replace('*', joinSelectParts);
+    finalString = finalString.replace('*', joinSelectParts.join(', '));
 
     const tablesNotJoinWithTheRest = [];
 
