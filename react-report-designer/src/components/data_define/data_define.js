@@ -1,4 +1,29 @@
-export const functions = ['Chọn', 'COUNT', 'SUM', 'MIN', 'MAX', 'AVG'];
+export const functions = [
+    {
+        dataTypeCanUse: ['*'],
+        value: 'Chọn',
+    },
+    {
+        dataTypeCanUse: ['*'],
+        value: 'COUNT',
+    },
+    {
+        dataTypeCanUse: ['number'],
+        value: 'SUM',
+    },
+    {
+        dataTypeCanUse: ['number'],
+        value: 'MIN',
+    },
+    {
+        dataTypeCanUse: ['number'],
+        value: 'MAX',
+    },
+    {
+        dataTypeCanUse: ['number'],
+        value: 'AVG',
+    },
+];
 export const orders = ['Chọn', 'ASC', 'DESC'];
 
 export const operators = [

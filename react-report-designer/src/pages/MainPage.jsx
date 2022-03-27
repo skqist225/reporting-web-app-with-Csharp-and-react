@@ -21,16 +21,6 @@ function MainPage() {
     });
 
     useEffect(() => {
-        if (removedTable) {
-            fields.forEach(field => {
-                if (field.tableName === removedTable) {
-                    remove(field);
-                }
-            });
-        }
-    }, [removedTable]);
-
-    useEffect(() => {
         dispatch(fetchTableNames());
     }, []);
 
@@ -44,11 +34,11 @@ function MainPage() {
                 `${window.location.origin}/report?query=${query.replace(/=/g, 'EQUAL')}`,
                 '_blank'
             );
-            dispatch(resetIsValid());
         }
         if (isValid === false) {
             alert('query is invalid;');
         }
+        dispatch(resetIsValid());
     }, [isValid]);
 
     useEffect(() => {
@@ -105,6 +95,7 @@ function MainPage() {
                                     key={table.tableName}
                                     append={append}
                                     remove={remove}
+                                    fields={fields}
                                 />
                             ))}
                         </div>

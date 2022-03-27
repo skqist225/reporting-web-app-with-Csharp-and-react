@@ -18,7 +18,11 @@ export default function buildTableQuery(tables, crtTableName) {
                         }
                         case 'fieldsInFunction': {
                             tableQuery[partName].forEach(({ name, aggregateFunction }) => {
-                                caseQuery.push(`${aggregateFunction}(${name})`);
+                                caseQuery.push(
+                                    `${aggregateFunction}(${name}) AS ${aggregateFunction}_${name
+                                        .split('.')
+                                        .pop()}`
+                                );
                             });
                             queryParts.push({
                                 partName,
@@ -54,8 +58,11 @@ export default function buildTableQuery(tables, crtTableName) {
 
             let haveAggregateFunction = false;
             let storedSelectFields = '';
+            let storeOrderByFields = '';
+            let storedWhereFields = '';
             let haveFieldInSelect = false;
             if (queryParts.length) finalQuery = 'SELECT ';
+
             queryParts.forEach(({ partName, content }) => {
                 switch (partName) {
                     case 'fieldsInSelect': {
@@ -69,19 +76,28 @@ export default function buildTableQuery(tables, crtTableName) {
                         haveAggregateFunction = true;
                         break;
                     }
-                }
-                if (!finalQuery.includes('FROM')) finalQuery += ` FROM ${crtTableName}`;
-
-                if (partName === 'fieldsInWhere') {
-                    finalQuery += ` WHERE ${content}`;
-                }
-                if (haveAggregateFunction) {
-                    finalQuery += ` GROUP BY ${storedSelectFields}`;
-                }
-                if (partName === 'fieldsInOrderBy') {
-                    finalQuery += ` ORDER BY ${content}`;
+                    case 'fieldsInWhere': {
+                        storedWhereFields = ` WHERE ${content}`;
+                        break;
+                    }
+                    case 'fieldsInOrderBy': {
+                        storeOrderByFields = ` ORDER BY ${content}`;
+                        break;
+                    }
                 }
             });
+            if (!finalQuery.includes('FROM')) finalQuery += ` FROM ${crtTableName}`;
+            finalQuery += storedWhereFields;
+            if (haveAggregateFunction) {
+                if (storedSelectFields) finalQuery += ` GROUP BY ${storedSelectFields}`;
+                else {
+                    const fieldsInFunction = tableQuery['fieldsInFunction']
+                        .map(({ name }) => name)
+                        .join(', ');
+                    finalQuery += ` GROUP BY ${fieldsInFunction}`;
+                }
+            }
+            finalQuery += storeOrderByFields;
             return;
         }
     });

@@ -14,14 +14,12 @@ import {
 
 import $ from 'jquery';
 import './css/my_drag.css';
-import buildTableQuery from '../scripts/buildTableQuery';
-import buildTableJoin from '../scripts/buildTableJoin';
-import addJoinColumnToSelect from '../scripts/addJoinColumnToSelect';
 
 function DraggableTable({
     table: { tableName: crtTableName, properties: crtProperties },
     append,
     remove,
+    fields,
 }) {
     const dispatch = useDispatch();
     const { tables, signToRemoveConnector, removedTable } = useSelector(state => state.database);
@@ -58,22 +56,34 @@ function DraggableTable({
         tables.forEach(({ properties, tableName }) => {
             properties.forEach(({ COLUMN_REFERENCE, COLUMN_NAME }) => {
                 if (COLUMN_REFERENCE && COLUMN_REFERENCE === crtTableName) {
-                    localConnectors.push({
-                        start: tableName,
-                        end: crtTableName,
-                        refColumn: COLUMN_NAME,
-                        id: drawConnector(`.${tableName}`, `.${crtTableName}`),
+                    const isConnectorAdded = localConnectors.some(({ start, end, refColumn }) => {
+                        if (start === tableName && end === crtTableName) {
+                            return true;
+                        }
                     });
+                    if (!isConnectorAdded)
+                        localConnectors.push({
+                            start: tableName,
+                            end: crtTableName,
+                            refColumn: COLUMN_NAME,
+                            id: drawConnector(`.${tableName}`, `.${crtTableName}`),
+                        });
                 }
             });
             crtProperties.forEach(({ COLUMN_REFERENCE, COLUMN_NAME }) => {
                 if (COLUMN_REFERENCE && COLUMN_REFERENCE === tableName) {
-                    localConnectors.push({
-                        start: crtTableName,
-                        end: tableName,
-                        refColumn: COLUMN_NAME,
-                        id: drawConnector(`.${crtTableName}`, `.${tableName}`),
+                    const isConnectorAdded = localConnectors.some(({ start, end, refColumn }) => {
+                        if (start === crtTableName && end === tableName) {
+                            return true;
+                        }
                     });
+                    if (!isConnectorAdded)
+                        localConnectors.push({
+                            start: crtTableName,
+                            end: tableName,
+                            refColumn: COLUMN_NAME,
+                            id: drawConnector(`.${crtTableName}`, `.${tableName}`),
+                        });
                 }
             });
         });
@@ -84,9 +94,16 @@ function DraggableTable({
 
     useEffect(() => {
         if (signToRemoveConnector && crtTableName === removedTable) {
+            fields.forEach(field => {
+                if (field.tableName === removedTable) {
+                    remove(field);
+                }
+            });
+
             removeConnectors(
                 tables.filter(({ tableName }) => tableName === crtTableName)[0].connectors
             );
+
             dispatch(removeTable(crtTableName));
         }
     }, [signToRemoveConnector]);
@@ -228,6 +245,7 @@ function DraggableTable({
                                             value={
                                                 crtTableName + '?' + COLUMN_NAME + '?' + DATA_TYPE
                                             }
+                                            className={crtTableName}
                                         />
                                         <span style={{ fontSize: '14px' }}>{COLUMN_NAME}</span>
                                         {CONSTRAINT_TYPE === 'PK' && (

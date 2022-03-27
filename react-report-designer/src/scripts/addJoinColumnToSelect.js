@@ -1,10 +1,11 @@
-export default function addJoinColumnToSelect(finalTableQuery, joinField, tableName) {
+export default function addJoinColumnToSelect(finalTableQuery, joinField) {
     if (finalTableQuery?.includes(joinField)) {
         return [finalTableQuery, false];
     } else {
-        const selectPart =
-            finalTableQuery.split('FROM')[0].replace('(SELECT', '').trim() + `, ${joinField}`;
-        console.log(selectPart);
-        return [`(SELECT ${selectPart} FROM ${finalTableQuery.split('FROM').pop()}`, true];
+        let selectPart = finalTableQuery.split('FROM')[0].replace('(SELECT', '').trim();
+        return [
+            `(SELECT ${selectPart + ', ' + joinField} FROM ${finalTableQuery.split('FROM').pop()}`,
+            true,
+        ];
     }
 }

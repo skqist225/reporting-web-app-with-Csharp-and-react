@@ -13,7 +13,11 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 
 import $ from 'jquery';
-import { updateFieldsInWhere, updateFieldsInFunction } from '../features/databaseSlice';
+import {
+    updateFieldsInWhere,
+    updateFieldsInFunction,
+    updateFieldsInSelect,
+} from '../features/databaseSlice';
 import { functions, operators, orders } from './data_define/data_define';
 
 function ConditionField({ field, register, index }) {
@@ -31,37 +35,81 @@ function ConditionField({ field, register, index }) {
             : ['char', 'nchar', 'varchar'].includes(dataType)
             ? 'char'
             : 'number';
-    let {
-        tableQuery: { fieldsInWhere },
-    } = tables.filter(({ tableName: tblName }) => tblName === tableName)[0];
+
+    const table = tables.filter(({ tableName: tblName }) => tblName === tableName);
+    let fieldsInWhere = [];
+    let fieldsInFunction = [];
+    let fieldsInSelect = [];
+    if (table.length) {
+        const {
+            tableQuery: { fieldsInWhere: fiw, fieldsInFunction: fif, fieldsInSelect: fis },
+        } = table[0];
+        fieldsInWhere = fiw;
+        fieldsInFunction = fif;
+        fieldsInSelect = fis;
+    }
 
     function onFunctionChange(e) {
-        // setSelectedFunction(e.target.value);
+        setSelectedFunction(e.target.value);
 
-        if (e.target.value !== 'Chọn') {
+        if (e.target.value === 'Chọn') {
             dispatch(
                 updateFieldsInFunction({
-                    tableName: field.tableName,
-                    fieldsInFunction: [
-                        {
-                            name: `${field.tableName}.${field.colName}`,
-                            aggregateFunction: e.target.value,
-                        },
-                    ],
+                    tableName,
+                    fieldsInFunction: fieldsInFunction.filter(
+                        ({ name }) => name !== `${tableName}.${colName}`
+                    ),
+                })
+            );
+
+            dispatch(
+                updateFieldsInSelect({
+                    tableName,
+                    fieldsInSelect: [...fieldsInSelect, `${tableName}.${colName}`],
                 })
             );
         } else {
-            dispatch(
-                updateFieldsInFunction({
-                    tableName: field.tableName,
-                    fieldsInFunction: [
-                        //    {
-                        //        name: `${field.tableName}.${field.colName}`,
-                        //        aggregateFunction: e.target.value,
-                        //    },
-                    ],
-                })
+            const indexOfCrtFieldInWhere = fieldsInFunction.findIndex(
+                ({ name }) => name === `${tableName}.${colName}`
             );
+            if (indexOfCrtFieldInWhere !== -1) {
+                dispatch(
+                    updateFieldsInFunction({
+                        tableName: field.tableName,
+                        fieldsInFunction: fieldsInFunction.map((value, index) => {
+                            if (index === indexOfCrtFieldInWhere)
+                                return {
+                                    ...value,
+                                    aggregateFunction: e.target.value,
+                                };
+
+                            return value;
+                        }),
+                    })
+                );
+            } else {
+                dispatch(
+                    updateFieldsInFunction({
+                        tableName,
+                        fieldsInFunction: [
+                            ...fieldsInFunction,
+                            {
+                                name: `${tableName}.${colName}`,
+                                aggregateFunction: e.target.value,
+                            },
+                        ],
+                    })
+                );
+                console.log(fieldsInSelect);
+                dispatch(
+                    updateFieldsInSelect({
+                        tableName,
+                        fieldsInSelect: fieldsInSelect.filter(
+                            value => value !== `${tableName}.${colName}`
+                        ),
+                    })
+                );
+            }
         }
     }
 
@@ -195,11 +243,15 @@ function ConditionField({ field, register, index }) {
                     onChange={onFunctionChange}
                     size='small'
                 >
-                    {functions.map(fn => (
-                        <MenuItem key={fn} value={fn}>
-                            <ListItemText primary={fn} />
-                        </MenuItem>
-                    ))}
+                    {functions.map(({ dataTypeCanUse, value }) => {
+                        if (dataTypeCanUse.includes(dataType) || dataTypeCanUse.includes('*')) {
+                            return (
+                                <MenuItem key={value} value={value}>
+                                    <ListItemText primary={value} />
+                                </MenuItem>
+                            );
+                        }
+                    })}
                 </Select>
             </FormControl>
 
@@ -233,13 +285,7 @@ function ConditionField({ field, register, index }) {
                         onChange={onConditionChange}
                     >
                         {operators.map(({ dataTypeCanUse, value }, index) => {
-                            if (dataTypeCanUse.includes('*'))
-                                return (
-                                    <MenuItem key={value} value={value}>
-                                        <ListItemText primary={value} />
-                                    </MenuItem>
-                                );
-                            if (dataTypeCanUse.includes(dataType)) {
+                            if (dataTypeCanUse.includes(dataType) || dataTypeCanUse.includes('*')) {
                                 return (
                                     <MenuItem key={value} value={value}>
                                         <ListItemText primary={value} />
