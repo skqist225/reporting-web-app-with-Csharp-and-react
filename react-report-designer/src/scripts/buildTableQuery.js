@@ -1,6 +1,9 @@
 export default function buildTableQuery(tables, crtTableName) {
     let finalQuery = '';
     tables.forEach(({ tableName, tableQuery }) => {
+        if (!tableQuery.fieldsInSelect.length) {
+            return;
+        }
         if (tableName === crtTableName) {
             let queryParts = [];
             Object.keys(tableQuery).forEach(partName => {
@@ -80,10 +83,10 @@ export default function buildTableQuery(tables, crtTableName) {
                         storedWhereFields = ` WHERE ${content}`;
                         break;
                     }
-                    case 'fieldsInOrderBy': {
-                        storeOrderByFields = ` ORDER BY ${content}`;
-                        break;
-                    }
+                    // case 'fieldsInOrderBy': {
+                    //     storeOrderByFields = ` ORDER BY ${content}`;
+                    //     break;
+                    // }
                 }
             });
             if (!finalQuery.includes('FROM')) finalQuery += ` FROM ${crtTableName}`;

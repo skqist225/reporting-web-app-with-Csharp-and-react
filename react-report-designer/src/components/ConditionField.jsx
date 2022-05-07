@@ -17,6 +17,7 @@ import {
     updateFieldsInWhere,
     updateFieldsInFunction,
     updateFieldsInSelect,
+    updateFieldsInOrderby,
 } from '../features/databaseSlice';
 import { functions, operators, orders } from './data_define/data_define';
 
@@ -33,20 +34,22 @@ function ConditionField({ field, register, index }) {
         dataType.toLowerCase() === 'nvarchar'
             ? 'nvarchar'
             : ['char', 'nchar', 'varchar'].includes(dataType)
-            ? 'char'
-            : 'number';
+                ? 'char'
+                : 'number';
 
     const table = tables.filter(({ tableName: tblName }) => tblName === tableName);
     let fieldsInWhere = [];
     let fieldsInFunction = [];
     let fieldsInSelect = [];
+    let fieldsInOrderBy = [];
     if (table.length) {
         const {
-            tableQuery: { fieldsInWhere: fiw, fieldsInFunction: fif, fieldsInSelect: fis },
+            tableQuery: { fieldsInWhere: fiw, fieldsInFunction: fif, fieldsInSelect: fis, fieldsInOrderBy: fio },
         } = table[0];
         fieldsInWhere = fiw;
         fieldsInFunction = fif;
         fieldsInSelect = fis;
+        fieldsInOrderBy = fio;
     }
 
     function onFunctionChange(e) {
@@ -115,6 +118,47 @@ function ConditionField({ field, register, index }) {
 
     function onOrderByChange(e) {
         setSelectedOrderBy(e.target.value);
+
+        if (e.target.value === 'Chọn') {
+            dispatch(
+                updateFieldsInOrderby({
+                    tableName,
+                    fieldsInOrderBy: fieldsInOrderBy.filter(
+                        ({ name }) => name !== `${tableName}.${colName}`
+                    ),
+                })
+            );
+        } else {
+            const indexOfCrtFieldInWhere = fieldsInOrderBy.findIndex(
+                ({ name }) => name === `${tableName}.${colName}`
+            );
+            if (indexOfCrtFieldInWhere !== -1) {
+                dispatch(
+                    updateFieldsInOrderby({
+                        tableName,
+                        fieldsInOrderBy: fieldsInOrderBy.map((value, index) =>
+                            index === indexOfCrtFieldInWhere ? {
+                                ...value,
+                                order: e.target.value,
+                            } : value
+                        ),
+                    })
+                );
+            } else {
+                dispatch(
+                    updateFieldsInOrderby({
+                        tableName,
+                        fieldsInOrderBy: [
+                            ...fieldsInOrderBy,
+                            {
+                                name: `${tableName}.${colName}`,
+                                order: e.target.value,
+                            },
+                        ],
+                    })
+                );
+            }
+        }
     }
 
     function onConditionChange(e) {
@@ -134,8 +178,8 @@ function ConditionField({ field, register, index }) {
                 dataType === 'nvarchar'
                     ? `N'${expression}'`
                     : dataType.includes('char')
-                    ? `'${expression}'`
-                    : expression;
+                        ? `'${expression}'`
+                        : expression;
 
             const indexOfCrtFieldInWhere = fieldsInWhere.findIndex(
                 ({ name }) => name === `${tableName}.${colName}`
@@ -183,8 +227,8 @@ function ConditionField({ field, register, index }) {
                 dataType === 'nvarchar'
                     ? `N'${e.target.value}'`
                     : dataType.includes('char')
-                    ? `'${e.target.value}'`
-                    : e.target.value;
+                        ? `'${e.target.value}'`
+                        : e.target.value;
 
             const indexOfCrtFieldInWhere = fieldsInWhere.findIndex(
                 ({ name }) => name === `${tableName}.${colName}`
@@ -221,6 +265,7 @@ function ConditionField({ field, register, index }) {
             }
         }
     }
+
 
     return (
         <div

@@ -112,6 +112,15 @@ const databaseSlice = createSlice({
                         : table.tableQuery,
             }));
         },
+        updateFieldsInOrderby: (state, { payload: { tableName, fieldsInOrderBy } }) => {
+            state.tables = state.tables.map(table => ({
+                ...table,
+                tableQuery:
+                    table.tableName === tableName
+                        ? { ...table.tableQuery, fieldsInOrderBy }
+                        : table.tableQuery,
+            }));
+        },
         resetIsValid: (state, { payload }) => {
             state.isValid = null;
         },
@@ -127,16 +136,16 @@ const databaseSlice = createSlice({
                 Table = Table.map(({ COLUMN_NAME, CONSTRAINT_NAME, DATA_TYPE }, index) => {
                     return CONSTRAINT_NAME?.includes('FK')
                         ? {
-                              COLUMN_NAME,
-                              CONSTRAINT_TYPE: 'FK',
-                              COLUMN_REFERENCE: CONSTRAINT_NAME.split('_').pop(),
-                              DATA_TYPE,
-                          }
+                            COLUMN_NAME,
+                            CONSTRAINT_TYPE: 'FK',
+                            COLUMN_REFERENCE: CONSTRAINT_NAME.split('_').pop(),
+                            DATA_TYPE,
+                        }
                         : {
-                              COLUMN_NAME,
-                              CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') && 'PK',
-                              DATA_TYPE,
-                          };
+                            COLUMN_NAME,
+                            CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') && 'PK',
+                            DATA_TYPE,
+                        };
                 });
 
                 set.add({
@@ -172,6 +181,7 @@ export const {
         updateFieldsInSelect,
         updateFieldsInWhere,
         updateFieldsInFunction,
+        updateFieldsInOrderby,
         resetIsValid,
     },
 } = databaseSlice;

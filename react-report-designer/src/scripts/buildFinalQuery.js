@@ -8,7 +8,10 @@ export default function buildFinalQuery(tables) {
         allJoinableOfCrtTable = [];
     tables.forEach(({ tableQuery, tableName }) => {
         const buildedTableQuery = buildTableQuery(tables, tableName);
-        if (buildedTableQuery) queries.set(tableName, `(${buildedTableQuery}) AS ${tableName}`);
+        if (buildedTableQuery) {
+            let query = `(${buildedTableQuery}) AS ${tableName}`;
+            queries.set(tableName, query);
+        }
     });
     tables.forEach(({ tableName }) => {
         allJoinableOfCrtTable.push(...buildTableJoin(tables, tableName, desiredJoinBy, queries));
@@ -376,6 +379,23 @@ export default function buildFinalQuery(tables) {
     if (tablesNotJoinWithTheRest.length)
         finalString += concatJoinString + ',' + tablesNotJoinWithTheRest.join(',');
     else finalString += concatJoinString;
+
+    Array.from(queries.keys()).forEach(tableName => {
+        if (concatJoinString !== '' && !concatJoinString.includes(`AS ${tableName}`)) {
+            tablesNotJoinWithTheRest.push(queries.get(tableName));
+        }
+    });
+
+    let orders = [];
+    tables.forEach(({ tableQuery }) => {
+        if (tableQuery.fieldsInOrderBy.length) {
+            tableQuery.fieldsInOrderBy.forEach(({ name, order }) => {
+                orders.push(`${name} ${order}`);
+            });
+        }
+    });
+
+    finalString += orders.length ? ` ORDER BY ${orders.join(', ')}` : '';
 
     return queries.size ? finalString : '';
 }

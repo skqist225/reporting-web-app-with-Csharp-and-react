@@ -46,7 +46,7 @@ function MainPage() {
     }, [tables]);
 
     return (
-        <main>
+        <main style={{ maxHeight: '100vh', minHeight: '100vh' }}>
             <div id='editQuery' style={{ display: 'block' }}>
                 <div className='' style={{ position: 'relative' }}>
                     <TextareaAutosize
@@ -58,11 +58,13 @@ function MainPage() {
                             fontSize: '16px',
                             border: '2px solid paleblue',
                             borderRadius: '8px',
+                            maxWidth: '100%',
+                            minWidth: '100%'
                         }}
                         defaultValue={query}
                         readOnly
                     />
-                    <div style={{ position: 'absolute', bottom: '0', right: '0' }}>
+                    <div style={{ position: 'absolute', bottom: '10px', right: '0px' }}>
                         <Fab
                             variant='extended'
                             color='primary'
@@ -78,14 +80,17 @@ function MainPage() {
                     <ConditionArray fields={fields} register={register} setQuery={setQuery} />
                 </div>
                 <div className='normal-flex' style={{ height: '100%' }}>
-                    <div>{tableNames && <ListTableName tableNames={tableNames} />}</div>
+                    <div style={{ height: '550px' }}>{tableNames && <ListTableName tableNames={tableNames} />}</div>
+                    <div style={{ width: '10px' }}>
+
+                    </div>
                     <article
                         className='flex'
                         style={{
                             boxShadow: 'rgb(0 0 0 / 28%) 0px 8px 28px',
-                            height: '500px',
+                            height: '550px',
                             width: '100%',
-                            border: '1px solid red',
+                            borderRadius: '8px',
                         }}
                     >
                         <div className='normal-flex'>

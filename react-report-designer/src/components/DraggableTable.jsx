@@ -201,6 +201,7 @@ function DraggableTable({
                             backgroundColor: 'rgba(0,120,215,255)',
                             color: 'white',
                             paddingTop: '4px',
+                            cursor: 'pointer'
                         }}
                     >
                         {crtTableName}
@@ -215,6 +216,9 @@ function DraggableTable({
                         }}
                     >
                         {crtProperties.map(({ COLUMN_NAME, CONSTRAINT_TYPE, DATA_TYPE }, index) => {
+                            if (COLUMN_NAME === 'PASSWORD') {
+                                return null;
+                            }
                             if (
                                 CONSTRAINT_TYPE === 'FK' &&
                                 crtProperties.some(
