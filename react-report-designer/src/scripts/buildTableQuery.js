@@ -1,7 +1,7 @@
 export default function buildTableQuery(tables, crtTableName) {
     let finalQuery = '';
     tables.forEach(({ tableName, tableQuery }) => {
-        if (!tableQuery.fieldsInSelect.length) {
+        if (!tableQuery.fieldsInSelect.length && !tableQuery.fieldsInFunction.length) {
             return;
         }
         if (tableName === crtTableName) {
@@ -13,9 +13,12 @@ export default function buildTableQuery(tables, crtTableName) {
                     let caseQuery = [];
                     switch (partName) {
                         case 'fieldsInSelect': {
+                            console.log(tableQuery[partName])
+                            let unhiddenFields = tableQuery[partName].filter(field => !field.includes(':hidden'));
+                            console.log(unhiddenFields)
                             queryParts.push({
                                 partName,
-                                content: tableQuery[partName].join(', '),
+                                content: unhiddenFields.length ? unhiddenFields.join(', ') : '',
                             });
                             break;
                         }
@@ -65,7 +68,7 @@ export default function buildTableQuery(tables, crtTableName) {
             let storedWhereFields = '';
             let haveFieldInSelect = false;
             if (queryParts.length) finalQuery = 'SELECT ';
-
+            console.log('queryParts: ', queryParts)
             queryParts.forEach(({ partName, content }) => {
                 switch (partName) {
                     case 'fieldsInSelect': {

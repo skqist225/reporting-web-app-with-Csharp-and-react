@@ -132,7 +132,7 @@ const databaseSlice = createSlice({
             })
             .addCase(fetchTableProperties.fulfilled, (state, { payload: { tableName, Table } }) => {
                 const set = new Set([...state.tables]);
-
+                console.log(Table);
                 Table = Table.map(({ COLUMN_NAME, CONSTRAINT_NAME, DATA_TYPE }, index) => {
                     return CONSTRAINT_NAME?.includes('FK')
                         ? {
@@ -143,7 +143,7 @@ const databaseSlice = createSlice({
                         }
                         : {
                             COLUMN_NAME,
-                            CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') && 'PK',
+                            CONSTRAINT_TYPE: CONSTRAINT_NAME?.includes('PK') ? 'PK' : '',
                             DATA_TYPE,
                         };
                 });

@@ -390,7 +390,14 @@ export default function buildFinalQuery(tables) {
     tables.forEach(({ tableQuery }) => {
         if (tableQuery.fieldsInOrderBy.length) {
             tableQuery.fieldsInOrderBy.forEach(({ name, order }) => {
-                orders.push(`${name} ${order}`);
+                if (tableQuery.fieldsInSelect.includes(name)) {
+                    orders.push(`${name} ${order}`);
+                }
+                tableQuery.fieldsInFunction.forEach(({ name: nm, aggregateFunction }) => {
+                    const [tableName, colName] = name.split('\.');
+                    if (nm === name)
+                        orders.push(`${tableName}.${aggregateFunction}_${colName} ${order}`);
+                })
             });
         }
     });

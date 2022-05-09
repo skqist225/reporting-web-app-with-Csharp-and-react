@@ -35,7 +35,7 @@ function ConditionField({ field, register, index }) {
             ? 'nvarchar'
             : ['char', 'nchar', 'varchar'].includes(dataType)
                 ? 'char'
-                : 'number';
+                : ['bit'].includes(dataType) ? 'bit' : 'number';
 
     const table = tables.filter(({ tableName: tblName }) => tblName === tableName);
     let fieldsInWhere = [];
@@ -54,6 +54,7 @@ function ConditionField({ field, register, index }) {
 
     function onFunctionChange(e) {
         setSelectedFunction(e.target.value);
+        console.log(e.target.value);
 
         if (e.target.value === 'Chọn') {
             dispatch(
@@ -103,6 +104,10 @@ function ConditionField({ field, register, index }) {
                         ],
                     })
                 );
+
+                // fieldsInSelect: fieldsInSelect.map(
+                //     value => value === `${tableName}.${colName}` ? `${value}:hidden` : value
+                // ),
                 console.log(fieldsInSelect);
                 dispatch(
                     updateFieldsInSelect({

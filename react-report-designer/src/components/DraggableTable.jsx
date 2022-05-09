@@ -219,6 +219,12 @@ function DraggableTable({
                             if (COLUMN_NAME === 'PASSWORD') {
                                 return null;
                             }
+                            if (COLUMN_NAME === 'HOCKY' && CONSTRAINT_TYPE === '') {
+                                return null;
+                            }
+                            if (COLUMN_NAME === 'MALTC' && CONSTRAINT_TYPE === '') {
+                                return null;
+                            }
                             if (
                                 CONSTRAINT_TYPE === 'FK' &&
                                 crtProperties.some(

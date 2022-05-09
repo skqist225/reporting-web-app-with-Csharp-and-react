@@ -48,11 +48,11 @@ export const operators = [
         value: '<=',
     },
     {
-        dataTypeCanUse: ['number', 'char', 'nvarchar'],
+        dataTypeCanUse: ['number', 'char', 'nvarchar', 'bit'],
         value: '=',
     },
     {
-        dataTypeCanUse: ['number', 'char', 'nvarchar'],
+        dataTypeCanUse: ['number', 'char', 'nvarchar', 'bit'],
         value: '<>',
     },
     {
